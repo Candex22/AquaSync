@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSync - Sistema de Riego Inteligente</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Aqua<span>Sync</span></h1>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Programación</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-map-marked"></i>
+                    <span>Zonas de Riego</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Estadísticas</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header with Page Title and User Menu -->
+            <div class="header">
+                <div class="page-title">
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="user-menu">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Widgets -->
+            <div class="dashboard-grid">
+                <!-- Weather Widget -->
+                <div class="widget weather-widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Clima Actual</h3>
+                        <div class="widget-actions">
+                            <button><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="weather-info">
+                        <div class="weather-temp">24°C</div>
+                        <i class="fas fa-sun weather-icon"></i>
+                    </div>
+                    <div class="weather-details">
+                        <div class="weather-detail-item">
+                            <div class="weather-detail-value">40%</div>
+                            <div class="weather-detail-label">Humedad</div>
+                        </div>
+                        <div class="weather-detail-item">
+                            <div class="weather-detail-value">10 km/h</div>
+                            <div class="weather-detail-label">Viento</div>
+                        </div>
+                        <div class="weather-detail-item">
+                            <div class="weather-detail-value">0%</div>
+                            <div class="weather-detail-label">Lluvia</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status Widget -->
+                <div class="widget status-widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Estado del Sistema</h3>
+                        <div class="widget-actions">
+                            <button><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
+                    </div>
+                    <div class="status-indicators">
+                        <div class="status-indicator">
+                            <div class="indicator-icon indicator-green"></div>
+                            <span>Sistema Operativo</span>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="indicator-icon indicator-green"></div>
+                            <span>Conectividad</span>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="indicator-icon indicator-green"></div>
+                            <span>Válvulas</span>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="indicator-icon indicator-orange"></div>
+                            <span>Presión de Agua</span>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="indicator-icon indicator-green"></div>
+                            <span>Sensores</span>
+                        </div>
+                        <div class="status-indicator">
+                            <div class="indicator-icon indicator-green"></div>
+                            <span>Bombas</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Next Scheduled Irrigation -->
+                <div class="widget next-schedule-widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Próximos Riegos</h3>
+                        <div class="widget-actions">
+                            <button><i class="fas fa-calendar"></i></button>
+                        </div>
+                    </div>
+                    <div class="next-irrigation">
+                        <div class="irrigation-time">Hoy, 18:30</div>
+                        <div class="irrigation-zones">Zonas: 1, 3, 5</div>
+                        <div class="irrigation-duration">Duración: 25 minutos</div>
+                    </div>
+                    <div class="next-irrigation">
+                        <div class="irrigation-time">Mañana, 06:00</div>
+                        <div class="irrigation-zones">Zonas: 2, 4, 6</div>
+                        <div class="irrigation-duration">Duración: 30 minutos</div>
+                    </div>
+                </div>
+                
+                <!-- Zone Control Widget -->
+                <div class="widget zone-control-widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Control de Zonas</h3>
+                        <div class="widget-actions">
+                            <button><i class="fas fa-th-large"></i></button>
+                            <button><i class="fas fa-list"></i></button>
+                        </div>
+                    </div>
+                    <div class="zones-grid">
+                        <div class="zone-card">
+                            <div class="zone-status zone-active"></div>
+                            <div class="zone-name">Zona 1: Área Central</div>
+                            <div class="zone-humidity">
+                                Humedad:
+                                <div class="humidity-bar">
+                                    <div class="humidity-level" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            <div class="zone-actions">
+                                <button class="zone-btn activate-btn">Activar</button>
+                                <button class="zone-btn schedule-btn">Programar</button>
+                            </div>
+                        </div>
+                        <div class="zone-card">
+                            <div class="zone-status zone-inactive"></div>
+                            <div class="zone-name">Zona 2: Lateral Izquierdo</div>
+                            <div class="zone-humidity">
+                                Humedad:
+                                <div class="humidity-bar">
+                                    <div class="humidity-level" style="width: 45%"></div>
+                                </div>
+                            </div>
+                            <div class="zone-actions">
+                                <button class="zone-btn activate-btn">Activar</button>
+                                <button class="zone-btn schedule-btn">Programar</button>
+                            </div>
+                        </div>
+                        <div class="zone-card">
+                            <div class="zone-status zone-inactive"></div>
+                            <div class="zone-name">Zona 3: Lateral Derecho</div>
+                            <div class="zone-humidity">
+                                Humedad:
+                                <div class="humidity-bar">
+                                    <div class="humidity-level" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div class="zone-actions">
+                                <button class="zone-btn activate-btn">Activar</button>
+                                <button class="zone-btn schedule-btn">Programar</button>
+                            </div>
+                        </div>
+                        <div class="zone-card">
+                            <div class="zone-status zone-inactive"></div>
+                            <div class="zone-name">Zona 4: Área de Portería Norte</div>
+                            <div class="zone-humidity">
+                                Humedad:
+                                <div class="humidity-bar">
+                                    <div class="humidity-level" style="width: 30%"></div>
+                                </div>
+                            </div>
+                            <div class="zone-actions">
+                                <button class="zone-btn activate-btn">Activar</button>
+                                <button class="zone-btn schedule-btn">Programar</button>
+                            </div>
+                        </div>
+                        <div class="zone-card">
+                            <div class="zone-status zone-inactive"></div>
+                            <div class="zone-name">Zona 5: Área de Portería Sur</div>
+                            <div class="zone-humidity">
+                                Humedad:
+                                <div class="humidity-bar">
+                                    <div class="humidity-level" style="width: 55%"></div>
+                                </div>
+                            </div>
+                            <div class="zone-actions">
+                                <button class="zone-btn activate-btn">Activar</button>
+                                <button class="zone-btn schedule-btn">Programar</button>
+                            </div>
+                        </div>
+                        <div class="zone-card">
+                            <div class="zone-status zone-inactive"></div>
+                            <div class="zone-name">Zona 6: Perímetro</div>
+                            <div class="zone-humidity">
+                                Humedad:
+                                <div class="humidity-bar">
+                                    <div class="humidity-level" style="width: 65%"></div>
+                                </div>
+                            </div>
+                            <div class="zone-actions">
+                                <button class="zone-btn activate-btn">Activar</button>
+                                <button class="zone-btn schedule-btn">Programar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Manual Module -->
+            <div class="control-manual">
+                <div class="control-header">
+                    <h3 class="control-title">Control Manual</h3>
+                    <div class="control-actions">
+                        <button><i class="fas fa-power-off"></i> Activar Todas las Zonas</button>
+                    </div>
+                </div>
+                <div class="widget">
+                    <p>Utilice los controles para activar manualmente el riego en zonas específicas o programe ciclos de riego personalizados.</p>
+                    <div class="zone-actions" style="margin-top: 15px;">
+                        <button class="zone-btn activate-btn" style="max-width: 200px;">
+                            <i class="fas fa-play"></i> Iniciar Riego Manual
+                        </button>
+                        <button class="zone-btn schedule-btn" style="max-width: 200px;">
+                            <i class="fas fa-calendar-plus"></i> Crear Nueva Programación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
