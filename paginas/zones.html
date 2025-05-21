@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSync - Zonas de Riego</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/zones.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../src/supabase-config.js"></script>
+    <script src="../src/field-mapping.js" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Aqua<span>Sync</span></h1>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html">
+                    <div class="nav-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </a>
+                <div class="nav-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Programación</span>
+                </div>
+                <div class="nav-item active">
+                    <i class="fas fa-map-marked"></i>
+                    <span>Zonas de Riego</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Estadísticas</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header with Page Title and User Menu -->
+            <div class="header">
+                <div class="page-title">
+                    <h2>Zonas de Riego</h2>
+                </div>
+                <div class="user-menu">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control de Mapeo de Campo -->
+            <div class="widget field-mapping-widget">
+                <div class="widget-header">
+                    <h3 class="widget-title">Mapeo de Campo</h3>
+                    <div class="widget-actions">
+                        <button id="btn-save-map"><i class="fas fa-save"></i> Guardar</button>
+                        <button id="btn-clear-map"><i class="fas fa-trash"></i> Limpiar</button>
+                    </div>
+                </div>
+
+                <div class="field-controls">
+                    <div class="field-selector">
+                        <label for="field-type">Tipo de Campo:</label>
+                        <select id="field-type">
+                            <option value="futbol">Fútbol</option>
+                            <option value="rugby">Rugby</option>
+                        </select>
+                    </div>
+
+                    <div class="grid-controls">
+                        <label for="grid-size">Tamaño del Grid:</label>
+                        <select id="grid-size">
+                            <option value="5">5x5</option>
+                            <option value="10" selected>10x10</option>
+                            <option value="15">15x15</option>
+                            <option value="20">20x20</option>
+                        </select>
+                    </div>
+
+                    <div class="sprinkler-controls">
+                        <label for="sprinkler-type">Tipo de Aspersor:</label>
+                        <select id="sprinkler-type">
+                            <option value="small" data-radius="1">Pequeño (Alcance 6m)</option>
+                            <option value="medium" data-radius="2" selected>Mediano (Alcance 12m)</option>
+                            <option value="large" data-radius="3">Grande (Alcance 18m)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-container">
+                    <div id="field-map" class="field-map futbol">
+                        <div id="grid-overlay" class="grid-overlay"></div>
+                        <div id="sprinklers-layer" class="sprinklers-layer"></div>
+                        <div id="coverage-layer" class="coverage-layer"></div>
+                    </div>
+                </div>
+
+                <div class="field-info">
+                    <div class="field-stats">
+                        <div class="field-stat-item">
+                            <span class="stat-label">Aspersores:</span>
+                            <span id="sprinkler-count" class="stat-value">0</span>
+                        </div>
+                        <div class="field-stat-item">
+                            <span class="stat-label">Cobertura:</span>
+                            <span id="coverage-percent" class="stat-value">0%</span>
+                        </div>
+                        <div class="field-stat-item">
+                            <span class="stat-label">Zonas:</span>
+                            <span id="zones-count" class="stat-value">0</span>
+                        </div>
+                    </div>
+
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: rgba(172, 189, 105, 0.5);"></div>
+                            <span>Zona de Cobertura</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon"><i class="fas fa-tint"></i></div>
+                            <span>Aspersor</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Aspersores -->
+            <div class="widget sprinkler-list-widget">
+                <div class="widget-header">
+                    <h3 class="widget-title">Lista de Aspersores</h3>
+                    <div class="widget-actions">
+                        <button id="btn-download-config"><i class="fas fa-download"></i> Exportar</button>
+                    </div>
+                </div>
+                <table class="sprinkler-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo</th>
+                            <th>Posición</th>
+                            <th>Zona</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sprinkler-list">
+                        <!-- Aquí se generarán las filas de aspersores dinámicamente -->
+                        <tr class="empty-message">
+                            <td colspan="5">No hay aspersores colocados en el campo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar un aspersor -->
+    <div id="sprinkler-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Aspersor</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-sprinkler-id">
+                <div class="form-group">
+                    <label for="edit-sprinkler-name">Nombre:</label>
+                    <input type="text" id="edit-sprinkler-name" placeholder="Nombre del aspersor">
+                </div>
+                <div class="form-group">
+                    <label for="edit-sprinkler-type">Tipo:</label>
+                    <select id="edit-sprinkler-type">
+                        <option value="small">Pequeño (Alcance 6m)</option>
+                        <option value="medium">Mediano (Alcance 12m)</option>
+                        <option value="large">Grande (Alcance 18m)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-sprinkler-zone">Zona:</label>
+                    <select id="edit-sprinkler-zone">
+                        <option value="1">Zona 1</option>
+                        <option value="2">Zona 2</option>
+                        <option value="3">Zona 3</option>
+                        <option value="4">Zona 4</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-update-sprinkler" class="btn-primary">Guardar Cambios</button>
+                <button id="btn-delete-sprinkler" class="btn-danger">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
