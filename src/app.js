@@ -67,32 +67,12 @@ async function loadWeatherData() {
         // Utilizamos OpenWeatherMap API (necesitarías una API key real)
         // Por ahora usamos una ubicación por defecto (Madrid)
         const apiKey = '2261de86fcc2b517c6db4a7b24065acf';
-        const city = 'Madrid';
+        const city = 'Buenos Aires';
         const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
         
-        // Para desarrollo, usamos datos de ejemplo sin hacer la petición real
-        // En producción, descomentar el fetch y usar el API key real
-        /*
+
         const response = await fetch(url);
         weatherData = await response.json();
-        */
-        
-        // Datos de ejemplo para desarrollo
-        weatherData = {
-            main: {
-                temp: 24,
-                humidity: 40
-            },
-            wind: {
-                speed: 10
-            },
-            weather: [
-                {
-                    main: 'Clear',
-                    icon: '01d'
-                }
-            ]
-        };
         
         // Actualizar la interfaz con los datos del clima
         updateWeatherUI();
