@@ -31,6 +31,8 @@ body {
     text-align: center;
     padding: 0 20px 20px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    position: fixed;
+    margin-left: 3%;
 }
 
 .logo h1 {
@@ -44,10 +46,12 @@ body {
 
 .nav-menu {
     padding: 20px 0;
+    margin-top: 3%;
+    position: fixed;
 }
 
 .nav-item {
-    padding: 12px 25px;
+    padding: 12px 55px;
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -506,7 +510,7 @@ body {
 }
 
 .form-group input {
-    width: 100%;
+    width: 95%;
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
