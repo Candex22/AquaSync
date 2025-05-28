@@ -7,16 +7,16 @@ let zonesList = [];
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Inicializando aplicación AquaSync...');
-    
+
     // Inicializar Supabase (definido en supabase-config.js)
     if (typeof initSupabase === 'function') {
         initSupabase();
     }
-    
+
     // Cargar datos iniciales
     loadWeatherData();
     loadZonesFromDatabase();
-    
+
     // Configurar event listeners
     setupEventListeners();
 });
@@ -28,26 +28,8 @@ function setupEventListeners() {
     if (manualControlBtn) {
         manualControlBtn.addEventListener('click', toggleAllZones);
     }
-    
-    // Botón para agregar nueva zona
-    const addZoneBtn = document.getElementById('add-zone-btn');
-    if (addZoneBtn) {
-        addZoneBtn.addEventListener('click', showAddZoneForm);
-    }
-    
-    // Formulario para agregar nueva zona
-    const addZoneForm = document.getElementById('add-zone-form');
-    if (addZoneForm) {
-        addZoneForm.addEventListener('submit', handleAddZoneSubmit);
-    }
-    
-    // Botón para cerrar formulario
-    const closeFormBtn = document.querySelector('.close-form');
-    if (closeFormBtn) {
-        closeFormBtn.addEventListener('click', hideAddZoneForm);
-    }
-    
-    // Botón para programar riego
+
+    // Botón para programar riego (general, not specific to adding zones)
     const scheduleBtn = document.querySelector('.schedule-btn');
     if (scheduleBtn) {
         scheduleBtn.addEventListener('click', showScheduleForm);
@@ -58,32 +40,32 @@ function setupEventListeners() {
 async function loadWeatherData() {
     try {
         const weatherWidget = document.querySelector('.weather-widget');
-        
+
         // Muestra indicador de carga
         if (weatherWidget) {
             weatherWidget.querySelector('.weather-info').innerHTML = '<div class="loading">Cargando datos del clima...</div>';
         }
-        
+
         // Utilizamos OpenWeatherMap API (necesitarías una API key real)
-        // Por ahora usamos una ubicación por defecto (Madrid)
+        // Por ahora usamos una ubicación por defecto (Buenos Aires)
         const apiKey = '2261de86fcc2b517c6db4a7b24065acf';
         const city = 'Buenos Aires';
         const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
-        
+
 
         const response = await fetch(url);
         weatherData = await response.json();
-        
+
         // Actualizar la interfaz con los datos del clima
         updateWeatherUI();
-        
+
     } catch (error) {
         console.error('Error al cargar datos del clima:', error);
-        
+
         // Muestra mensaje de error en el widget
         const weatherWidget = document.querySelector('.weather-widget');
         if (weatherWidget) {
-            weatherWidget.querySelector('.weather-info').innerHTML = 
+            weatherWidget.querySelector('.weather-info').innerHTML =
                 '<div class="error">Error al cargar datos del clima</div>';
         }
     }
@@ -92,10 +74,10 @@ async function loadWeatherData() {
 // Actualizar la interfaz con los datos del clima
 function updateWeatherUI() {
     if (!weatherData) return;
-    
+
     const weatherWidget = document.querySelector('.weather-widget');
     if (!weatherWidget) return;
-    
+
     // Determinar ícono según el tipo de clima
     let weatherIcon = 'fa-sun';
     if (weatherData.weather && weatherData.weather[0]) {
@@ -107,13 +89,13 @@ function updateWeatherUI() {
         else if (weatherCondition === 'Drizzle') weatherIcon = 'fa-cloud-drizzle';
         else if (weatherCondition === 'Mist' || weatherCondition === 'Fog') weatherIcon = 'fa-smog';
     }
-    
+
     // Actualizar HTML
     weatherWidget.querySelector('.weather-info').innerHTML = `
         <div class="weather-temp">${Math.round(weatherData.main.temp)}°C</div>
         <i class="fas ${weatherIcon} weather-icon"></i>
     `;
-    
+
     // Actualizar detalles
     const weatherDetails = weatherWidget.querySelector('.weather-details');
     if (weatherDetails) {
@@ -127,7 +109,7 @@ function updateWeatherUI() {
                 <div class="weather-detail-label">Viento</div>
             </div>
             <div class="weather-detail-item">
-                <div class="weather-detail-value">${weatherData.weather[0].main === 'Rain' ? 
+                <div class="weather-detail-value">${weatherData.weather[0].main === 'Rain' ?
                     'Sí' : '0%'}</div>
                 <div class="weather-detail-label">Lluvia</div>
             </div>
@@ -143,167 +125,51 @@ async function loadZonesFromDatabase() {
             console.error('Cliente de Supabase no inicializado');
             return;
         }
-        
+
         // Preparar la interfaz para mostrar estado de carga
         const zonesGrid = document.querySelector('.zones-grid');
         if (zonesGrid) {
             zonesGrid.innerHTML = '<div class="loading">Cargando zonas...</div>';
         }
-        
+
         // Obtener zonas de Supabase
         const { data, error } = await window.supabaseClient
             .from('zonas')
             .select('*')
             .order('id', { ascending: true });
-            
+
         if (error) throw error;
-        
-        // Si no hay datos, mostrar módulo para agregar zonas
+
+        // Si no hay datos, mostrar un mensaje de que no hay zonas configuradas
         if (!data || data.length === 0) {
-            showAddZoneModule();
+            if (zonesGrid) {
+                zonesGrid.innerHTML = `
+                    <div class="empty-zones">
+                        <h4>No hay zonas configuradas.</h4>
+                        <p>Contacte al administrador para configurar las zonas de riego.</p>
+                    </div>
+                `;
+            }
+            zonesList = []; // Ensure zonesList is empty if no data
             return;
         }
-        
+
         // Guardar datos en variable global
         zonesList = data;
-        
+
         // Actualizar la interfaz
         renderZonesList();
-        
+
     } catch (error) {
         console.error('Error al cargar zonas:', error);
-        
-        // Mostrar mensaje de error y opción para agregar zonas
+
+        // Mostrar mensaje de error
         const zonesGrid = document.querySelector('.zones-grid');
         if (zonesGrid) {
             zonesGrid.innerHTML = `
-                <div class="error-message">Error al cargar las zonas</div>
-                <button id="add-zone-btn" class="zone-btn activate-btn">
-                    <i class="fas fa-plus"></i> Agregar Zona
-                </button>
+                <div class="error-message">Error al cargar las zonas. Por favor, recargue la página.</div>
             `;
-            
-            // Configurar event listener para el botón
-            const addZoneBtn = document.getElementById('add-zone-btn');
-            if (addZoneBtn) {
-                addZoneBtn.addEventListener('click', showAddZoneForm);
-            }
         }
-    }
-}
-
-// Mostrar el módulo para agregar zonas
-function showAddZoneModule() {
-    const zonesGrid = document.querySelector('.zones-grid');
-    if (!zonesGrid) return;
-    
-    zonesGrid.innerHTML = `
-        <div class="add-zone-module">
-            <h4>No hay zonas configuradas</h4>
-            <p>Configura las zonas de riego para comenzar a utilizar el sistema.</p>
-            <button id="add-zone-btn" class="zone-btn activate-btn">
-                <i class="fas fa-plus"></i> Agregar Zona
-            </button>
-        </div>
-    `;
-    
-    // Configurar event listener para el botón
-    const addZoneBtn = document.getElementById('add-zone-btn');
-    if (addZoneBtn) {
-        addZoneBtn.addEventListener('click', showAddZoneForm);
-    }
-}
-
-// Mostrar formulario para agregar zonas
-function showAddZoneForm() {
-    // Crear el overlay si no existe
-    let overlay = document.getElementById('form-overlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'form-overlay';
-        document.body.appendChild(overlay);
-    }
-    
-    // Crear el formulario
-    overlay.innerHTML = `
-        <div class="modal-form">
-            <div class="form-header">
-                <h3>Agregar Nueva Zona</h3>
-                <button class="close-form"><i class="fas fa-times"></i></button>
-            </div>
-            <form id="add-zone-form">
-                <div class="form-group">
-                    <label for="zone-name">Nombre de la Zona</label>
-                    <input type="text" id="zone-name" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="zone-description">Descripción</label>
-                    <input type="text" id="zone-description" name="description">
-                </div>
-                <div class="form-group">
-                    <label for="zone-humidity">Humedad Inicial (%)</label>
-                    <input type="number" id="zone-humidity" name="humidity" min="0" max="100" value="50">
-                </div>
-                <button type="submit" class="zone-btn activate-btn">Guardar</button>
-            </form>
-        </div>
-    `;
-    
-    // Mostrar el overlay
-    overlay.style.display = 'flex';
-    
-    // Configurar event listeners
-    overlay.querySelector('.close-form').addEventListener('click', hideAddZoneForm);
-    document.getElementById('add-zone-form').addEventListener('submit', handleAddZoneSubmit);
-}
-
-// Ocultar formulario
-function hideAddZoneForm() {
-    const overlay = document.getElementById('form-overlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
-}
-
-// Manejar envío del formulario para agregar zona
-async function handleAddZoneSubmit(event) {
-    event.preventDefault();
-    
-    // Verificar que el cliente de Supabase esté inicializado
-    if (!window.supabaseClient) {
-        alert('Error: No se pudo conectar con la base de datos');
-        return;
-    }
-    
-    // Obtener datos del formulario
-    const name = document.getElementById('zone-name').value;
-    const description = document.getElementById('zone-description').value;
-    const humidity = document.getElementById('zone-humidity').value;
-    
-    try {
-        // Insertar en Supabase
-        const { data, error } = await window.supabaseClient
-            .from('zonas')
-            .insert([
-                { 
-                    name, 
-                    description, 
-                    humidity: parseInt(humidity), 
-                    active: false 
-                }
-            ]);
-            
-        if (error) throw error;
-        
-        // Ocultar formulario
-        hideAddZoneForm();
-        
-        // Recargar zonas
-        loadZonesFromDatabase();
-        
-    } catch (error) {
-        console.error('Error al guardar zona:', error);
-        alert('Error al guardar la zona. Intente nuevamente.');
     }
 }
 
@@ -311,16 +177,15 @@ async function handleAddZoneSubmit(event) {
 function renderZonesList() {
     const zonesGrid = document.querySelector('.zones-grid');
     if (!zonesGrid || !zonesList) return;
-    
-    // Si la lista está vacía, mostrar módulo para agregar zonas
+
+    // Si la lista está vacía, mostrar mensaje apropiado (ya manejado en loadZonesFromDatabase)
     if (zonesList.length === 0) {
-        showAddZoneModule();
         return;
     }
-    
+
     // Limpiar contenedor
     zonesGrid.innerHTML = '';
-    
+
     // Agregar cada zona
     zonesList.forEach(zone => {
         const zoneCard = document.createElement('div');
@@ -341,35 +206,21 @@ function renderZonesList() {
                 <button class="zone-btn schedule-btn" data-zone-id="${zone.id}">Programar</button>
             </div>
         `;
-        
+
         // Agregar al contenedor
         zonesGrid.appendChild(zoneCard);
-        
+
         // Configurar event listeners para esta zona
         const activateBtn = zoneCard.querySelector('.activate-btn');
         if (activateBtn) {
             activateBtn.addEventListener('click', () => toggleZone(zone.id));
         }
-        
+
         const scheduleBtn = zoneCard.querySelector('.schedule-btn');
         if (scheduleBtn) {
             scheduleBtn.addEventListener('click', () => showScheduleForm(zone.id));
         }
     });
-    
-    // Agregar botón para agregar zona
-    const addZoneBtn = document.createElement('div');
-    addZoneBtn.className = 'zone-card add-zone-card';
-    addZoneBtn.innerHTML = `
-        <div class="add-zone-content">
-            <i class="fas fa-plus"></i>
-            <div>Agregar Zona</div>
-        </div>
-    `;
-    zonesGrid.appendChild(addZoneBtn);
-    
-    // Configurar event listener
-    addZoneBtn.addEventListener('click', showAddZoneForm);
 }
 
 // Activar/Desactivar todas las zonas
@@ -380,40 +231,40 @@ async function toggleAllZones() {
             alert('Error: No se pudo conectar con la base de datos');
             return;
         }
-        
+
         // Verificar si alguna zona está activa
         const anyZoneActive = zonesList.some(zone => zone.active);
-        
+
         // Valor a establecer (activar todas o desactivar todas)
         const newState = !anyZoneActive;
-        
+
         // Actualizar tabla test en Supabase
         const { data, error } = await window.supabaseClient
             .from('test')
             .update({ estado: newState })
             .eq('id', 1); // Asumimos que hay un registro con id=1
-            
+
         if (error) throw error;
-        
+
         // Actualizar zonas en la base de datos
         const { error: zonesError } = await window.supabaseClient
             .from('zonas')
             .update({ active: newState })
             .gt('id', 0); // Actualizar todas las zonas
-            
+
         if (zonesError) throw zonesError;
-        
+
         // Actualizar interfaz
         loadZonesFromDatabase();
-        
+
         // Cambiar texto del botón
         const manualControlBtn = document.querySelector('.control-actions button');
         if (manualControlBtn) {
-            manualControlBtn.innerHTML = newState ? 
-                '<i class="fas fa-power-off"></i> Desactivar Todas las Zonas' : 
+            manualControlBtn.innerHTML = newState ?
+                '<i class="fas fa-power-off"></i> Desactivar Todas las Zonas' :
                 '<i class="fas fa-power-off"></i> Activar Todas las Zonas';
         }
-        
+
     } catch (error) {
         console.error('Error al cambiar estado de las zonas:', error);
         alert('Error al cambiar el estado de las zonas. Intente nuevamente.');
@@ -428,35 +279,35 @@ async function toggleZone(zoneId) {
             alert('Error: No se pudo conectar con la base de datos');
             return;
         }
-        
+
         // Encontrar la zona en la lista
         const zone = zonesList.find(z => z.id === zoneId);
         if (!zone) return;
-        
+
         // Nuevo estado (invertir el actual)
         const newState = !zone.active;
-        
+
         // Actualizar en Supabase
         const { data, error } = await window.supabaseClient
             .from('zonas')
             .update({ active: newState })
             .eq('id', zoneId);
-            
+
         if (error) throw error;
-        
+
         // Actualizar tabla test en Supabase (si se activa la zona)
         if (newState) {
             const { error: testError } = await window.supabaseClient
                 .from('test')
                 .update({ estado: true })
                 .eq('id', 1);
-                
+
             if (testError) throw testError;
         }
-        
+
         // Actualizar interfaz
         loadZonesFromDatabase();
-        
+
     } catch (error) {
         console.error(`Error al cambiar estado de la zona ${zoneId}:`, error);
         alert('Error al cambiar el estado de la zona. Intente nuevamente.');
@@ -472,7 +323,7 @@ function showScheduleForm(zoneId) {
         overlay.id = 'form-overlay';
         document.body.appendChild(overlay);
     }
-    
+
     // Título diferente si es una zona específica o todas
     let title = 'Programar Riego';
     if (zoneId) {
@@ -483,12 +334,12 @@ function showScheduleForm(zoneId) {
     } else {
         title += ' - Todas las Zonas';
     }
-    
+
     // Obtener fecha y hora actual para valores por defecto
     const now = new Date();
     const dateString = now.toISOString().split('T')[0];
     const timeString = now.toTimeString().substring(0, 5);
-    
+
     // Crear el formulario
     overlay.innerHTML = `
         <div class="modal-form">
@@ -514,58 +365,66 @@ function showScheduleForm(zoneId) {
             </form>
         </div>
     `;
-    
+
     // Mostrar el overlay
     overlay.style.display = 'flex';
-    
+
     // Configurar event listeners
-    overlay.querySelector('.close-form').addEventListener('click', hideAddZoneForm);
+    overlay.querySelector('.close-form').addEventListener('click', hideFormOverlay); // Changed to a more general close function
     document.getElementById('schedule-form').addEventListener('submit', handleScheduleSubmit);
+}
+
+// Ocultar formulario genérico (used for schedule form)
+function hideFormOverlay() {
+    const overlay = document.getElementById('form-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
 }
 
 // Manejar envío del formulario para programar riego
 async function handleScheduleSubmit(event) {
     event.preventDefault();
-    
+
     // Verificar que el cliente de Supabase esté inicializado
     if (!window.supabaseClient) {
         alert('Error: No se pudo conectar con la base de datos');
         return;
     }
-    
+
     // Obtener datos del formulario
     const zoneId = document.getElementById('schedule-zone-id').value;
     const date = document.getElementById('schedule-date').value;
     const time = document.getElementById('schedule-time').value;
     const duration = document.getElementById('schedule-duration').value;
-    
+
     // Combinar fecha y hora
     const scheduledDateTime = new Date(`${date}T${time}`);
-    
+
     try {
         // Insertar en Supabase
         const { data, error } = await window.supabaseClient
             .from('programacion')
             .insert([
-                { 
-                    zone_id: parseInt(zoneId), 
+                {
+                    zone_id: parseInt(zoneId),
                     scheduled_time: scheduledDateTime.toISOString(),
                     duration: parseInt(duration),
                     executed: false
                 }
             ]);
-            
+
         if (error) throw error;
-        
+
         // Ocultar formulario
-        hideAddZoneForm();
-        
+        hideFormOverlay();
+
         // Recargar programación
         loadScheduledIrrigation();
-        
+
         // Mostrar mensaje de éxito
         alert('Riego programado correctamente');
-        
+
     } catch (error) {
         console.error('Error al programar riego:', error);
         alert('Error al programar el riego. Intente nuevamente.');
@@ -580,14 +439,14 @@ async function loadScheduledIrrigation() {
             console.error('Cliente de Supabase no inicializado');
             return;
         }
-        
+
         // Preparar la interfaz
         const scheduledWidget = document.querySelector('.next-schedule-widget');
         if (!scheduledWidget) return;
-        
+
         // Mostrar estado de carga
         scheduledWidget.innerHTML = '<div class="loading">Cargando programación...</div>';
-        
+
         // Obtener programación de Supabase
         const { data, error } = await window.supabaseClient
             .from('programacion')
@@ -604,15 +463,15 @@ async function loadScheduledIrrigation() {
             .eq('executed', false)
             .order('scheduled_time', { ascending: true })
             .limit(5);
-            
+
         if (error) throw error;
-        
+
         // Actualizar la interfaz
         updateScheduleUI(data || []);
-        
+
     } catch (error) {
         console.error('Error al cargar programación:', error);
-        
+
         // Mostrar mensaje de error
         const scheduledWidget = document.querySelector('.next-schedule-widget');
         if (scheduledWidget) {
@@ -625,7 +484,7 @@ async function loadScheduledIrrigation() {
 function updateScheduleUI(scheduleItems) {
     const scheduledWidget = document.querySelector('.next-schedule-widget');
     if (!scheduledWidget) return;
-    
+
     // Verificar si hay elementos
     if (scheduleItems.length === 0) {
         scheduledWidget.innerHTML = `
@@ -642,16 +501,16 @@ function updateScheduleUI(scheduleItems) {
                 </button>
             </div>
         `;
-        
+
         // Configurar event listener para el botón
         const scheduleBtn = scheduledWidget.querySelector('.schedule-btn');
         if (scheduleBtn) {
             scheduleBtn.addEventListener('click', () => showScheduleForm());
         }
-        
+
         return;
     }
-    
+
     // Preparar HTML
     let html = `
         <div class="widget-header">
@@ -661,13 +520,13 @@ function updateScheduleUI(scheduleItems) {
             </div>
         </div>
     `;
-    
+
     // Agregar cada programación
     scheduleItems.forEach(item => {
         // Formatear fecha y hora
         const scheduleDate = new Date(item.scheduled_time);
         const today = new Date();
-        
+
         let dateText = '';
         if (scheduleDate.toDateString() === today.toDateString()) {
             dateText = 'Hoy';
@@ -677,19 +536,19 @@ function updateScheduleUI(scheduleItems) {
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             dateText = scheduleDate.toLocaleDateString('es-ES', options);
         }
-        
+
         // Formatear hora
-        const timeText = scheduleDate.toLocaleTimeString('es-ES', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+        const timeText = scheduleDate.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
         });
-        
+
         // Nombre de la zona
         let zoneName = 'Todas las zonas';
         if (item.zone_id > 0 && item.zonas) {
             zoneName = item.zonas.name;
         }
-        
+
         // Agregar al HTML
         html += `
             <div class="next-irrigation">
@@ -699,7 +558,7 @@ function updateScheduleUI(scheduleItems) {
             </div>
         `;
     });
-    
+
     // Actualizar widget
     scheduledWidget.innerHTML = html;
 }
@@ -712,26 +571,26 @@ async function checkScheduledIrrigation() {
             console.error('Cliente de Supabase no inicializado');
             return;
         }
-        
+
         // Obtener hora actual
         const now = new Date();
-        
+
         // Obtener programación pendiente
         const { data, error } = await window.supabaseClient
             .from('programacion')
             .select('*')
             .eq('executed', false)
             .lt('scheduled_time', now.toISOString());
-            
+
         if (error) throw error;
-        
+
         // Si no hay programación pendiente, salir
         if (!data || data.length === 0) return;
-        
+
         // Ejecutar cada programación
         for (const item of data) {
             console.log(`Ejecutando programación ${item.id}`);
-            
+
             // Activar la zona (o todas)
             if (item.zone_id > 0) {
                 // Activar zona específica
@@ -739,7 +598,7 @@ async function checkScheduledIrrigation() {
                     .from('zonas')
                     .update({ active: true })
                     .eq('id', item.zone_id);
-                    
+
                 if (zoneError) {
                     console.error(`Error al activar zona ${item.zone_id}:`, zoneError);
                     continue;
@@ -750,33 +609,33 @@ async function checkScheduledIrrigation() {
                     .from('zonas')
                     .update({ active: true })
                     .gt('id', 0);
-                    
+
                 if (zonesError) {
                     console.error('Error al activar todas las zonas:', zonesError);
                     continue;
                 }
             }
-            
+
             // Actualizar tabla test
             const { error: testError } = await window.supabaseClient
                 .from('test')
                 .update({ estado: true })
                 .eq('id', 1);
-                
+
             if (testError) {
                 console.error('Error al actualizar tabla test:', testError);
             }
-            
+
             // Marcar como ejecutada
             const { error: updateError } = await window.supabaseClient
                 .from('programacion')
                 .update({ executed: true })
                 .eq('id', item.id);
-                
+
             if (updateError) {
                 console.error(`Error al marcar programación ${item.id} como ejecutada:`, updateError);
             }
-            
+
             // Programar desactivación después de la duración
             setTimeout(async () => {
                 if (item.zone_id > 0) {
@@ -785,7 +644,7 @@ async function checkScheduledIrrigation() {
                         .from('zonas')
                         .update({ active: false })
                         .eq('id', item.zone_id);
-                        
+
                     if (zoneError) {
                         console.error(`Error al desactivar zona ${item.zone_id}:`, zoneError);
                     }
@@ -795,31 +654,31 @@ async function checkScheduledIrrigation() {
                         .from('zonas')
                         .update({ active: false })
                         .gt('id', 0);
-                        
+
                     if (zonesError) {
                         console.error('Error al desactivar todas las zonas:', zonesError);
                     }
                 }
-                
+
                 // Actualizar tabla test
                 const { error: testError } = await window.supabaseClient
                     .from('test')
                     .update({ estado: false })
                     .eq('id', 1);
-                    
+
                 if (testError) {
                     console.error('Error al actualizar tabla test:', testError);
                 }
-                
+
                 // Actualizar interfaz
                 loadZonesFromDatabase();
-                
+
             }, item.duration * 60 * 1000); // Convertir minutos a milisegundos
         }
-        
+
         // Recargar programación
         loadScheduledIrrigation();
-        
+
     } catch (error) {
         console.error('Error al verificar programación:', error);
     }
@@ -836,28 +695,28 @@ async function initializeDatabase() {
             console.error('Cliente de Supabase no inicializado');
             return;
         }
-        
+
         console.log('Verificando tabla test...');
-        
+
         // Verificar si existe el registro en la tabla test
         const { data, error } = await window.supabaseClient
             .from('test')
             .select('*')
             .eq('id', 1);
-            
+
         if (error) {
             console.error('Error al verificar tabla test:', error);
             return;
         }
-        
+
         // Si no existe, crear el registro
         if (!data || data.length === 0) {
             console.log('Creando registro inicial en tabla test...');
-            
+
             const { error: insertError } = await window.supabaseClient
                 .from('test')
                 .insert([{ id: 1, estado: false }]);
-                
+
             if (insertError) {
                 console.error('Error al crear registro en tabla test:', insertError);
             } else {
@@ -866,7 +725,7 @@ async function initializeDatabase() {
         } else {
             console.log('Tabla test ya inicializada');
         }
-        
+
     } catch (error) {
         console.error('Error al inicializar la base de datos:', error);
     }
@@ -879,4 +738,5 @@ document.addEventListener('DOMContentLoaded', () => {
         initSupabase();
         setTimeout(initializeDatabase, 1000); // Dar tiempo para que se inicialice Supabase
     }
+    loadScheduledIrrigation(); // Also load scheduled irrigation on DOMContentLoaded
 });
