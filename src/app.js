@@ -238,9 +238,9 @@ async function toggleAllZones() {
         // Valor a establecer (activar todas o desactivar todas)
         const newState = !anyZoneActive;
 
-        // Actualizar tabla test en Supabase
+        // Actualizar tabla control en Supabase
         const { data, error } = await window.supabaseClient
-            .from('test')
+            .from('control')
             .update({ estado: newState })
             .eq('id', 1); // Asumimos que hay un registro con id=1
 
@@ -295,10 +295,10 @@ async function toggleZone(zoneId) {
 
         if (error) throw error;
 
-        // Actualizar tabla test en Supabase (si se activa la zona)
+        // Actualizar tabla control en Supabase (si se activa la zona)
         if (newState) {
             const { error: testError } = await window.supabaseClient
-                .from('test')
+                .from('control')
                 .update({ estado: true })
                 .eq('id', 1);
 
@@ -616,14 +616,14 @@ async function checkScheduledIrrigation() {
                 }
             }
 
-            // Actualizar tabla test
+            // Actualizar tabla control
             const { error: testError } = await window.supabaseClient
-                .from('test')
+                .from('control')
                 .update({ estado: true })
                 .eq('id', 1);
 
             if (testError) {
-                console.error('Error al actualizar tabla test:', testError);
+                console.error('Error al actualizar tabla control:', testError);
             }
 
             // Marcar como ejecutada
@@ -660,14 +660,14 @@ async function checkScheduledIrrigation() {
                     }
                 }
 
-                // Actualizar tabla test
+                // Actualizar tabla control
                 const { error: testError } = await window.supabaseClient
-                    .from('test')
+                    .from('control')
                     .update({ estado: false })
                     .eq('id', 1);
 
                 if (testError) {
-                    console.error('Error al actualizar tabla test:', testError);
+                    console.error('Error al actualizar tabla control:', testError);
                 }
 
                 // Actualizar interfaz
@@ -696,34 +696,34 @@ async function initializeDatabase() {
             return;
         }
 
-        console.log('Verificando tabla test...');
+        console.log('Verificando tabla control...');
 
-        // Verificar si existe el registro en la tabla test
+        // Verificar si existe el registro en la tabla control
         const { data, error } = await window.supabaseClient
-            .from('test')
+            .from('control')
             .select('*')
             .eq('id', 1);
 
         if (error) {
-            console.error('Error al verificar tabla test:', error);
+            console.error('Error al verificar tabla control:', error);
             return;
         }
 
         // Si no existe, crear el registro
         if (!data || data.length === 0) {
-            console.log('Creando registro inicial en tabla test...');
+            console.log('Creando registro inicial en tabla control...');
 
             const { error: insertError } = await window.supabaseClient
-                .from('test')
+                .from('control')
                 .insert([{ id: 1, estado: false }]);
 
             if (insertError) {
-                console.error('Error al crear registro en tabla test:', insertError);
+                console.error('Error al crear registro en tabla control:', insertError);
             } else {
                 console.log('Registro creado correctamente');
             }
         } else {
-            console.log('Tabla test ya inicializada');
+            console.log('Tabla control ya inicializada');
         }
 
     } catch (error) {
