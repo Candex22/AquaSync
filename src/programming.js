@@ -11,7 +11,10 @@ const monthNames = [
 ];
 
 // Inicialización cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Esperar a que Supabase esté listo
+    await waitForSupabase();
+    
     initializeCalendar();
     loadZones();
     loadMonthSchedules();
@@ -175,6 +178,11 @@ async function loadDaySchedules(dateKey) {
     schedulesList.innerHTML = '<div class="loading">Cargando programaciones...</div>';
     
     try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
         const { data, error } = await supabase
             .from('programacion')
             .select(`
@@ -206,7 +214,7 @@ async function loadDaySchedules(dateKey) {
         }
     } catch (error) {
         console.error('Error cargando programaciones:', error);
-        schedulesList.innerHTML = '<div class="error-message">Error al cargar las programaciones</div>';
+        schedulesList.innerHTML = `<div class="error-message">Error al cargar las programaciones: ${error.message}</div>`;
     }
 }
 
@@ -245,6 +253,11 @@ function createScheduleElement(schedule) {
 // Cargar zonas para el select
 async function loadZones() {
     try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
         const { data, error } = await supabase
             .from('zonas')
             .select('id, name')
@@ -273,6 +286,11 @@ async function loadMonthSchedules() {
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     
     try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
         const { data, error } = await supabase
             .from('programacion')
             .select('id, scheduled_time, executed')
@@ -329,6 +347,11 @@ async function handleScheduleSubmit(event) {
     scheduledDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     
     try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
         const { data, error } = await supabase
             .from('programacion')
             .insert([
@@ -368,6 +391,11 @@ async function deleteSchedule(scheduleId) {
     }
     
     try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
         const { error } = await supabase
             .from('programacion')
             .delete()
@@ -397,6 +425,11 @@ async function editSchedule(scheduleId) {
     
     if (newDuration && !isNaN(newDuration) && parseInt(newDuration) > 0) {
         try {
+            // Verificar que supabase esté disponible
+            if (!supabase) {
+                throw new Error('Cliente de Supabase no está inicializado');
+            }
+            
             const { error } = await supabase
                 .from('programacion')
                 .update({ duration: parseInt(newDuration) })
@@ -447,6 +480,11 @@ async function loadUpcomingSchedules() {
     nextWeek.setDate(today.getDate() + 7);
     
     try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
         const { data, error } = await supabase
             .from('programacion')
             .select(`
@@ -504,6 +542,7 @@ async function loadUpcomingSchedules() {
         }
     } catch (error) {
         console.error('Error cargando próximas programaciones:', error);
+        const content = document.getElementById('quickActionContent');
         content.innerHTML = '<div class="error-message">Error al cargar las programaciones</div>';
     }
 }
@@ -577,6 +616,11 @@ async function handleQuickSchedule(event) {
     startTime.setMinutes(startTime.getMinutes() + delay);
     
     try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
         const { data, error } = await supabase
             .from('programacion')
             .insert([
