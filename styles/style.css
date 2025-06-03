@@ -259,21 +259,25 @@ body {
 
 /* Next Schedule Content */
 .next-irrigation {
-    padding: 15px;
+    padding: 10px;
     background-color: rgba(172, 189, 105, 0.1);
     border-radius: 5px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .irrigation-time {
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--light-green);
     margin-bottom: 5px;
 }
 
 .irrigation-zones {
-    font-size: 14px;
+    font-size: 12px;
+}
+
+.irrigation-duration {
+    font-size: 10px;
 }
 
 /* Zone Control Widget */

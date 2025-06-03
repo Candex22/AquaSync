@@ -460,7 +460,7 @@ async function loadScheduledIrrigation() {
             `)
             .eq('executed', false)
             .order('scheduled_time', { ascending: true })
-            .limit(5);
+            .limit(2);
 
         if (error) throw error;
 
