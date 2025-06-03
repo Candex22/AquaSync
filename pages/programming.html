@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSync - Programación de Riego</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/programming.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Scripts de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../src/supabase-config.js"></script>
+    <script src="../src/programming.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Aqua<span>Sync</span></h1>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html">
+                    <div class="nav-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </a>
+                <div class="nav-item active">
+                    <i class="fas fa-clock"></i>
+                    <span>Programación</span>
+                </div>
+                <a href="zones.html">
+                    <div class="nav-item">
+                        <i class="fas fa-map-marked"></i>
+                        <span>Zonas de Riego</span>
+                    </div>
+                </a>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Estadísticas</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header with Page Title and User Menu -->
+            <div class="header">
+                <div class="page-title">
+                    <h2>Programación de Riego</h2>
+                </div>
+                <div class="user-menu">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Widget -->
+            <div class="calendar-container">
+                <div class="widget calendar-widget">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Calendario de Riego</h3>
+                        <div class="calendar-navigation">
+                            <button id="prevMonth" class="nav-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h4 id="currentMonth">Enero 2025</h4>
+                            <button id="nextMonth" class="nav-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="calendar">
+                        <div class="calendar-header">
+                            <div class="day-header">Dom</div>
+                            <div class="day-header">Lun</div>
+                            <div class="day-header">Mar</div>
+                            <div class="day-header">Mié</div>
+                            <div class="day-header">Jue</div>
+                            <div class="day-header">Vie</div>
+                            <div class="day-header">Sáb</div>
+                        </div>
+                        <div class="calendar-body" id="calendarBody">
+                            <!-- Los días se generarán dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Panel -->
+                <div class="widget quick-actions">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Acciones Rápidas</h3>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="action-btn primary" onclick="showTodaySchedule()">
+                            <i class="fas fa-today"></i>
+                            <span>Riegos de Hoy</span>
+                        </button>
+                        <button class="action-btn secondary" onclick="showUpcomingSchedules()">
+                            <i class="fas fa-calendar-week"></i>
+                            <span>Próximos 7 Días</span>
+                        </button>
+                        <button class="action-btn success" onclick="createQuickSchedule()">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Riego Rápido</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Programaciones del Mes -->
+            <div class="widget schedule-summary">
+                <div class="widget-header">
+                    <h3 class="widget-title">Resumen del Mes</h3>
+                    <div class="widget-actions">
+                        <button onclick="loadMonthSchedules()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="schedule-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalSchedules">0</div>
+                        <div class="stat-label">Total Programaciones</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="executedSchedules">0</div>
+                        <div class="stat-label">Ejecutados</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="pendingSchedules">0</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar/agregar programaciones del día -->
+    <div id="dayScheduleModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Programaciones del Día</h3>
+                <button class="close-modal" onclick="closeDayModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Programaciones existentes -->
+                <div class="existing-schedules">
+                    <h4>Riegos Programados</h4>
+                    <div id="schedulesList" class="schedules-list">
+                        <div class="loading">Cargando programaciones...</div>
+                    </div>
+                </div>
+
+                <!-- Formulario para nueva programación -->
+                <div class="new-schedule-form">
+                    <h4>Agregar Nueva Programación</h4>
+                    <form id="scheduleForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="scheduleTime">Hora:</label>
+                                <input type="time" id="scheduleTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="scheduleDuration">Duración (min):</label>
+                                <input type="number" id="scheduleDuration" min="5" max="120" value="30" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scheduleZone">Zona de Riego:</label>
+                            <select id="scheduleZone" required>
+                                <option value="">Seleccionar zona...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn secondary" onclick="closeDayModal()">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn primary">
+                                <i class="fas fa-save"></i> Guardar Programación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para acciones rápidas -->
+    <div id="quickActionModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="quickActionTitle">Acción Rápida</h3>
+                <button class="close-modal" onclick="closeQuickActionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="quickActionContent">
+                    <!-- Contenido se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

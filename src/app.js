@@ -1,5 +1,3 @@
-// app.js - Funcionalidades principales para AquaSync
-
 // Variables globales
 let weatherData = null;
 let zonesList = [];
