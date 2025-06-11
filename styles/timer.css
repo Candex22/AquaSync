@@ -1,0 +1,362 @@
+/* Widget de timers activos */
+.active-timers-widget {
+    margin-top: 20px;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--light-gray);
+}
+
+.active-timers-widget .widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.active-timers-widget .widget-title {
+    color: var(--dark-brown);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.active-timers-widget .widget-title i {
+    color: var(--aqua-blue);
+}
+
+.active-timers-widget .widget-actions button {
+    background: none;
+    border: none;
+    color: var(--dark-brown);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.active-timers-widget .widget-actions button:hover {
+    background: var(--light-gray);
+    color: var(--aqua-blue);
+}
+
+/* Contenedor de timers */
+.active-timers-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Estado cuando no hay timers activos */
+.no-active-timers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--medium-gray);
+    text-align: center;
+}
+
+.no-active-timers i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: var(--light-gray);
+}
+
+.no-active-timers p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* Item individual de timer */
+.active-timer-item {
+    background: linear-gradient(135deg, var(--aqua-blue), var(--teal-green));
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+    transition: all 0.3s ease;
+}
+
+.active-timer-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 224, 208, 0.4);
+}
+
+.active-timer-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%), 
+                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%), 
+                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+/* Información del timer */
+.timer-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 1;
+}
+
+.timer-zone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.timer-zone i {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.timer-time {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+.timer-remaining {
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: block;
+    line-height: 1;
+}
+
+.timer-total {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Barra de progreso */
+.timer-progress {
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 1;
+}
+
+.timer-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.timer-progress-fill {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.timer-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.3) 50%, 
+        transparent 100%);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Acciones del timer */
+.timer-actions {
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 1;
+}
+
+.timer-cancel-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.timer-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.timer-cancel-btn:active {
+    transform: scale(0.95);
+}
+
+/* Animaciones para timers que están por terminar */
+.active-timer-item.timer-warning {
+    animation: timerWarning 1s infinite alternate;
+}
+
+@keyframes timerWarning {
+    0% { 
+        background: linear-gradient(135deg, var(--aqua-blue), var(--teal-green));
+    }
+    100% { 
+        background: linear-gradient(135deg, #ff6b6b, #ffa500);
+    }
+}
+
+.active-timer-item.timer-critical {
+    animation: timerCritical 0.5s infinite alternate;
+}
+
+@keyframes timerCritical {
+    0% { 
+        background: linear-gradient(135deg, #ff6b6b, #ff4757);
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.5);
+    }
+    100% { 
+        background: linear-gradient(135deg, #ff4757, #ff3742);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.7);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .active-timers-widget {
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .timer-info {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .timer-time {
+        text-align: left;
+    }
+    
+    .timer-zone {
+        font-size: 1rem;
+    }
+    
+    .timer-remaining {
+        font-size: 1.3rem;
+    }
+    
+    .active-timer-item {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .active-timers-widget .widget-title {
+        font-size: 1.1rem;
+    }
+    
+    .timer-zone {
+        font-size: 0.9rem;
+    }
+    
+    .timer-remaining {
+        font-size: 1.2rem;
+    }
+    
+    .timer-total {
+        font-size: 0.8rem;
+    }
+    
+    .no-active-timers i {
+        font-size: 2rem;
+    }
+    
+    .no-active-timers p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Estilos adicionales para integración con el tema existente */
+.active-timers-widget {
+    --primary-gradient: linear-gradient(135deg, var(--aqua-blue), var(--teal-green));
+    --warning-gradient: linear-gradient(135deg, #ff6b6b, #ffa500);
+    --critical-gradient: linear-gradient(135deg, #ff4757, #ff3742);
+}
+
+/* Efecto de pulso para timers críticos */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.timer-critical {
+    animation: pulse 1s infinite, timerCritical 0.5s infinite alternate;
+}
+
+/* Tooltip para botones */
+.timer-cancel-btn[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+.timer-cancel-btn[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+}
