@@ -1,700 +1,721 @@
-// Variables globales
+// Variables globales para la página de programación
 let currentDate = new Date();
 let selectedDate = null;
-let schedules = {};
-let zones = [];
+let zonesList = [];
+let irrigationTimer = null;
 
-// Nombres de los meses en español
-const monthNames = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
-
-// Inicialización cuando se carga la página
-document.addEventListener('DOMContentLoaded', async function() {
-    // Esperar a que Supabase esté listo
-    await waitForSupabase();
+// Inicializar la página de programación
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Inicializando página de programación...');
     
-    initializeCalendar();
-    loadZones();
-    loadMonthSchedules();
-    
-    // Event listeners
-    document.getElementById('prevMonth').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar();
-        loadMonthSchedules();
-    });
-    
-    document.getElementById('nextMonth').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar();
-        loadMonthSchedules();
-    });
-    
-    document.getElementById('scheduleForm').addEventListener('submit', handleScheduleSubmit);
+    // Inicializar Supabase
+    if (typeof initSupabase === 'function') {
+        initSupabase();
+        
+        // Esperar a que Supabase se inicialice
+        setTimeout(() => {
+            initializePage();
+        }, 1000);
+    }
 });
 
-// Inicializar el calendario
+// Inicializar todos los componentes de la página
+async function initializePage() {
+    try {
+        // Inicializar calendario
+        initializeCalendar();
+        
+        // Cargar zonas para el formulario
+        await loadZonesForForm();
+        
+        // Cargar estadísticas del mes
+        await loadMonthSchedules();
+        
+        // Inicializar sistema de timers
+        initializeTimerSystem();
+        
+        // Configurar event listeners
+        setupEventListeners();
+        
+        console.log('Página de programación inicializada correctamente');
+        
+    } catch (error) {
+        console.error('Error al inicializar la página:', error);
+    }
+}
+
+// Inicializar sistema de timers
+function initializeTimerSystem() {
+    // Crear instancia del timer si no existe
+    if (!window.irrigationTimer) {
+        window.irrigationTimer = new IrrigationTimer();
+    }
+    
+    // Asignar a variable local
+    irrigationTimer = window.irrigationTimer;
+    
+    // Inicializar el timer
+    irrigationTimer.initialize();
+    
+    // Crear contenedor de timers en la página de programación
+    createTimersSection();
+}
+
+// Crear sección de timers activos en la página
+function createTimersSection() {
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) return;
+    
+    // Verificar si ya existe
+    if (document.getElementById('programming-timers-widget')) return;
+    
+    // Crear widget de timers
+    const timersWidget = document.createElement('div');
+    timersWidget.id = 'programming-timers-widget';
+    timersWidget.className = 'widget active-timers-widget';
+    timersWidget.innerHTML = `
+        <div class="widget-header">
+            <h3 class="widget-title">
+                <i class="fas fa-stopwatch"></i>
+                Riegos en Ejecución
+            </h3>
+            <div class="widget-actions">
+                <button onclick="refreshActiveTimers()" title="Actualizar">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        <div id="programming-timers-container" class="programming-timers-container">
+            <div class="no-active-timers">
+                <i class="fas fa-clock"></i>
+                <p>No hay riegos activos en este momento</p>
+            </div>
+        </div>
+    `;
+    
+    // Insertar después del resumen del mes
+    const scheduleWidget = document.querySelector('.schedule-summary');
+    if (scheduleWidget) {
+        scheduleWidget.after(timersWidget);
+    } else {
+        mainContent.appendChild(timersWidget);
+    }
+}
+
+// Configurar event listeners
+function setupEventListeners() {
+    // Navegación del calendario
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+    
+    if (prevBtn) prevBtn.addEventListener('click', previousMonth);
+    if (nextBtn) nextBtn.addEventListener('click', nextMonth);
+    
+    // Formulario de programación
+    const scheduleForm = document.getElementById('scheduleForm');
+    if (scheduleForm) {
+        scheduleForm.addEventListener('submit', handleScheduleSubmit);
+    }
+    
+    // Cerrar modales
+    const closeButtons = document.querySelectorAll('.close-modal');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', closeModals);
+    });
+}
+
+// Inicializar calendario
 function initializeCalendar() {
+    updateCalendarHeader();
     renderCalendar();
 }
 
-// Renderizar el calendario
-function renderCalendar() {
-    const calendarBody = document.getElementById('calendarBody');
+// Actualizar header del calendario
+function updateCalendarHeader() {
+    const monthNames = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    
     const currentMonthElement = document.getElementById('currentMonth');
+    if (currentMonthElement) {
+        currentMonthElement.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+    }
+}
+
+// Renderizar calendario
+async function renderCalendar() {
+    const calendarBody = document.getElementById('calendarBody');
+    if (!calendarBody) return;
     
-    // Actualizar el título del mes
-    currentMonthElement.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-    
-    // Limpiar el calendario
+    // Limpiar calendario
     calendarBody.innerHTML = '';
     
-    // Obtener el primer día del mes y el último día
+    // Obtener primer día del mes y días en el mes
     const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    
-    // Días del mes anterior para completar la primera semana
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
     
-    // Generar 42 días (6 semanas)
+    // Obtener programaciones del mes
+    const monthSchedules = await getMonthSchedules();
+    
+    // Crear días del calendario
     for (let i = 0; i < 42; i++) {
         const currentDay = new Date(startDate);
         currentDay.setDate(startDate.getDate() + i);
         
-        const dayElement = createDayElement(currentDay);
+        const dayElement = document.createElement('div');
+        dayElement.className = 'calendar-day';
+        
+        // Verificar si es del mes actual
+        if (currentDay.getMonth() !== currentDate.getMonth()) {
+            dayElement.classList.add('other-month');
+        }
+        
+        // Verificar si es hoy
+        const today = new Date();
+        if (currentDay.toDateString() === today.toDateString()) {
+            dayElement.classList.add('today');
+        }
+        
+        // Verificar si tiene programaciones
+        const daySchedules = monthSchedules.filter(schedule => {
+            const scheduleDate = new Date(schedule.scheduled_time);
+            return scheduleDate.toDateString() === currentDay.toDateString();
+        });
+        
+        if (daySchedules.length > 0) {
+            dayElement.classList.add('has-schedule');
+        }
+        
+        dayElement.innerHTML = `
+            <span class="day-number">${currentDay.getDate()}</span>
+            ${daySchedules.length > 0 ? `<span class="schedule-indicator">${daySchedules.length}</span>` : ''}
+        `;
+        
+        // Event listener para mostrar programaciones del día
+        dayElement.addEventListener('click', () => showDaySchedule(currentDay));
+        
         calendarBody.appendChild(dayElement);
     }
 }
 
-// Crear elemento de día
-function createDayElement(date) {
-    const dayElement = document.createElement('div');
-    dayElement.className = 'calendar-day';
-    
-    const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-    const isToday = isDateToday(date);
-    const dateKey = formatDateKey(date);
-    const daySchedules = schedules[dateKey] || [];
-    
-    // Aplicar clases CSS
-    if (!isCurrentMonth) {
-        dayElement.classList.add('other-month');
-    }
-    if (isToday) {
-        dayElement.classList.add('today');
-    }
-    if (daySchedules.length > 0) {
-        dayElement.classList.add('has-schedules');
-    }
-    
-    // Contenido del día
-    const dayNumber = document.createElement('div');
-    dayNumber.className = 'day-number';
-    dayNumber.textContent = date.getDate();
-    dayElement.appendChild(dayNumber);
-    
-    // Indicadores de programaciones
-    if (daySchedules.length > 0) {
-        const indicators = document.createElement('div');
-        indicators.className = 'schedule-indicators';
+// Obtener programaciones del mes actual
+async function getMonthSchedules() {
+    try {
+        if (!window.supabaseClient) return [];
         
-        if (daySchedules.length <= 3) {
-            // Mostrar puntos individuales
-            daySchedules.forEach(() => {
-                const dot = document.createElement('div');
-                dot.className = 'schedule-dot';
-                indicators.appendChild(dot);
-            });
-        } else {
-            // Mostrar contador
-            const count = document.createElement('div');
-            count.className = 'schedule-count';
-            count.textContent = daySchedules.length;
-            indicators.appendChild(count);
-        }
+        const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         
-        dayElement.appendChild(indicators);
+        const { data, error } = await window.supabaseClient
+            .from('programacion')
+            .select(`
+                id,
+                zone_id,
+                scheduled_time,
+                duration,
+                executed,
+                completed,
+                zonas (
+                    name
+                )
+            `)
+            .gte('scheduled_time', startOfMonth.toISOString())
+            .lte('scheduled_time', endOfMonth.toISOString())
+            .order('scheduled_time', { ascending: true });
+        
+        if (error) throw error;
+        return data || [];
+        
+    } catch (error) {
+        console.error('Error al obtener programaciones del mes:', error);
+        return [];
     }
+}
+
+// Mostrar programaciones del día
+async function showDaySchedule(date) {
+    selectedDate = date;
     
-    // Event listener para click en el día
-    dayElement.addEventListener('click', () => {
-        if (isCurrentMonth) {
-            selectedDate = new Date(date);
-            showDayScheduleModal(date);
-        }
-    });
-    
-    return dayElement;
-}
-
-// Verificar si una fecha es hoy
-function isDateToday(date) {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-}
-
-// Formatear fecha para usar como clave
-function formatDateKey(date) {
-    return date.toISOString().split('T')[0];
-}
-
-// Mostrar modal de programaciones del día
-function showDayScheduleModal(date) {
     const modal = document.getElementById('dayScheduleModal');
     const modalTitle = document.getElementById('modalTitle');
-    const dateKey = formatDateKey(date);
+    
+    if (!modal || !modalTitle) return;
     
     // Actualizar título
-    const dayName = date.toLocaleDateString('es-ES', { weekday: 'long' });
-    const dateStr = date.toLocaleDateString('es-ES', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
+    const dateStr = date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     });
-    modalTitle.textContent = `${dayName}, ${dateStr}`;
+    modalTitle.textContent = `Programaciones - ${dateStr}`;
     
     // Cargar programaciones del día
-    loadDaySchedules(dateKey);
-    
-    // Limpiar formulario
-    document.getElementById('scheduleForm').reset();
+    await loadDaySchedules(date);
     
     // Mostrar modal
     modal.style.display = 'flex';
 }
 
-// Cerrar modal del día
-function closeDayModal() {
-    document.getElementById('dayScheduleModal').style.display = 'none';
-    selectedDate = null;
-}
-
-// Cargar programaciones del día
-async function loadDaySchedules(dateKey) {
-    const schedulesList = document.getElementById('schedulesList');
-    schedulesList.innerHTML = '<div class="loading">Cargando programaciones...</div>';
-    
+// Cargar programaciones del día específico
+async function loadDaySchedules(date) {
     try {
-        // Verificar que supabase esté disponible
-        if (!supabase) {
-            throw new Error('Cliente de Supabase no está inicializado');
-        }
+        const schedulesList = document.getElementById('schedulesList');
+        if (!schedulesList) return;
         
-        const { data, error } = await supabase
+        schedulesList.innerHTML = '<div class="loading">Cargando programaciones...</div>';
+        
+        // Obtener programaciones del día
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        const { data, error } = await window.supabaseClient
             .from('programacion')
             .select(`
-                id, 
-                scheduled_time, 
-                duration, 
+                id,
+                zone_id,
+                scheduled_time,
+                duration,
                 executed,
-                zonas:zone_id (id, name)
+                completed,
+                started_at,
+                zonas (
+                    name
+                )
             `)
-            .gte('scheduled_time', `${dateKey}T00:00:00`)
-            .lt('scheduled_time', `${dateKey}T23:59:59`)
+            .gte('scheduled_time', startOfDay.toISOString())
+            .lte('scheduled_time', endOfDay.toISOString())
             .order('scheduled_time', { ascending: true });
-            
+        
         if (error) throw error;
         
-        if (data.length === 0) {
-            schedulesList.innerHTML = `
-                <div class="empty-schedules">
-                    <i class="fas fa-calendar-times"></i>
-                    <p>No hay riegos programados para este día</p>
-                </div>
-            `;
-        } else {
-            schedulesList.innerHTML = '';
-            data.forEach(schedule => {
-                const scheduleElement = createScheduleElement(schedule);
-                schedulesList.appendChild(scheduleElement);
-            });
-        }
+        // Renderizar programaciones
+        renderDaySchedules(data || []);
+        
     } catch (error) {
-        console.error('Error cargando programaciones:', error);
-        schedulesList.innerHTML = `<div class="error-message">Error al cargar las programaciones: ${error.message}</div>`;
+        console.error('Error al cargar programaciones del día:', error);
+        const schedulesList = document.getElementById('schedulesList');
+        if (schedulesList) {
+            schedulesList.innerHTML = '<div class="error">Error al cargar programaciones</div>';
+        }
     }
 }
 
-// Crear elemento de programación
-function createScheduleElement(schedule) {
-    const scheduleElement = document.createElement('div');
-    scheduleElement.className = `schedule-item ${schedule.executed ? 'schedule-executed' : ''}`;
+// Renderizar programaciones del día
+function renderDaySchedules(schedules) {
+    const schedulesList = document.getElementById('schedulesList');
+    if (!schedulesList) return;
     
-    const time = new Date(schedule.scheduled_time).toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit'
+    if (schedules.length === 0) {
+        schedulesList.innerHTML = '<div class="empty-schedules">No hay programaciones para este día</div>';
+        return;
+    }
+    
+    let html = '';
+    schedules.forEach(schedule => {
+        const scheduleTime = new Date(schedule.scheduled_time);
+        const timeStr = scheduleTime.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const zoneName = schedule.zone_id === 0 ? 'Todas las zonas' : 
+                        (schedule.zonas ? schedule.zonas.name : `Zona ${schedule.zone_id}`);
+        
+        let statusClass = 'pending';
+        let statusText = 'Pendiente';
+        let actionButton = '';
+        
+        if (schedule.completed) {
+            statusClass = 'completed';
+            statusText = 'Completado';
+        } else if (schedule.executed && schedule.started_at) {
+            statusClass = 'running';
+            statusText = 'En ejecución';
+            actionButton = `<button class="btn danger small" onclick="stopIrrigation(${schedule.id})">
+                <i class="fas fa-stop"></i> Detener
+            </button>`;
+        } else if (scheduleTime.getTime() < Date.now()) {
+            statusClass = 'missed';
+            statusText = 'Perdido';
+        } else {
+            actionButton = `<button class="btn secondary small" onclick="executeNow(${schedule.id})">
+                <i class="fas fa-play"></i> Ejecutar Ahora
+            </button>`;
+        }
+        
+        html += `
+            <div class="schedule-item ${statusClass}">
+                <div class="schedule-time">${timeStr}</div>
+                <div class="schedule-zone">${zoneName}</div>
+                <div class="schedule-duration">${schedule.duration} min</div>
+                <div class="schedule-status">${statusText}</div>
+                <div class="schedule-actions">
+                    ${actionButton}
+                    <button class="btn danger small" onclick="deleteSchedule(${schedule.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
     });
     
-    scheduleElement.innerHTML = `
-        <div class="schedule-info">
-            <div class="schedule-time">${time}</div>
-            <div class="schedule-details">
-                ${schedule.zonas?.name || 'Zona eliminada'} - ${schedule.duration} minutos
-            </div>
-        </div>
-        <div class="schedule-actions">
-            ${!schedule.executed ? `
-                <button class="edit-btn" onclick="editSchedule(${schedule.id})" title="Editar">
-                    <i class="fas fa-edit"></i>
-                </button>
-            ` : ''}
-            <button class="delete-btn" onclick="deleteSchedule(${schedule.id})" title="Eliminar">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
-    
-    return scheduleElement;
+    schedulesList.innerHTML = html;
 }
 
-// Cargar zonas para el select
-async function loadZones() {
+// Cargar zonas para el formulario
+async function loadZonesForForm() {
     try {
-        // Verificar que supabase esté disponible
-        if (!supabase) {
-            throw new Error('Cliente de Supabase no está inicializado');
-        }
+        if (!window.supabaseClient) return;
         
-        const { data, error } = await supabase
+        const { data, error } = await window.supabaseClient
             .from('zonas')
             .select('id, name')
-            .order('name', { ascending: true });
-            
+            .order('id', { ascending: true });
+        
         if (error) throw error;
         
-        zones = data;
-        const zoneSelect = document.getElementById('scheduleZone');
-        zoneSelect.innerHTML = '<option value="">Seleccionar zona...</option>';
+        zonesList = data || [];
         
-        data.forEach(zone => {
-            const option = document.createElement('option');
-            option.value = zone.id;
-            option.textContent = zone.name;
-            zoneSelect.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error cargando zonas:', error);
-    }
-}
-
-// Cargar programaciones del mes
-async function loadMonthSchedules() {
-    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    
-    try {
-        // Verificar que supabase esté disponible
-        if (!supabase) {
-            throw new Error('Cliente de Supabase no está inicializado');
+        // Actualizar select del formulario
+        const zoneSelect = document.getElementById('scheduleZone');
+        if (zoneSelect) {
+            zoneSelect.innerHTML = '<option value="">Seleccionar zona...</option>';
+            zonesList.forEach(zone => {
+                zoneSelect.innerHTML += `<option value="${zone.id}">${zone.name}</option>`;
+            });
+            zoneSelect.innerHTML += '<option value="0">Todas las zonas</option>';
         }
         
-        const { data, error } = await supabase
-            .from('programacion')
-            .select('id, scheduled_time, executed')
-            .gte('scheduled_time', startOfMonth.toISOString())
-            .lte('scheduled_time', endOfMonth.toISOString());
-            
-        if (error) throw error;
-        
-        // Agrupar por fecha
-        schedules = {};
-        data.forEach(schedule => {
-            const dateKey = schedule.scheduled_time.split('T')[0];
-            if (!schedules[dateKey]) {
-                schedules[dateKey] = [];
-            }
-            schedules[dateKey].push(schedule);
-        });
-        
-        // Actualizar estadísticas
-        updateScheduleStats(data);
-        
-        // Re-renderizar calendario con los nuevos datos
-        renderCalendar();
     } catch (error) {
-        console.error('Error cargando programaciones del mes:', error);
+        console.error('Error al cargar zonas:', error);
     }
 }
 
-// Actualizar estadísticas del mes
-function updateScheduleStats(data) {
-    const total = data.length;
-    const executed = data.filter(s => s.executed).length;
-    const pending = total - executed;
-    
-    document.getElementById('totalSchedules').textContent = total;
-    document.getElementById('executedSchedules').textContent = executed;
-    document.getElementById('pendingSchedules').textContent = pending;
-}
-
-// Manejar envío del formulario de programación
+// Manejar envío del formulario
 async function handleScheduleSubmit(event) {
     event.preventDefault();
     
-    if (!selectedDate) return;
-    
-    const formData = new FormData(event.target);
-    const time = document.getElementById('scheduleTime').value;
-    const duration = parseInt(document.getElementById('scheduleDuration').value);
-    const zoneId = parseInt(document.getElementById('scheduleZone').value);
-    
-    // Crear fecha y hora completa
-    const scheduledDateTime = new Date(selectedDate);
-    const [hours, minutes] = time.split(':');
-    scheduledDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    if (!window.supabaseClient || !selectedDate) return;
     
     try {
-        // Verificar que supabase esté disponible
-        if (!supabase) {
-            throw new Error('Cliente de Supabase no está inicializado');
+        const time = document.getElementById('scheduleTime').value;
+        const duration = parseInt(document.getElementById('scheduleDuration').value);
+        const zoneId = parseInt(document.getElementById('scheduleZone').value) || 0;
+        
+        // Crear fecha y hora combinada
+        const scheduleDateTime = new Date(selectedDate);
+        const [hours, minutes] = time.split(':');
+        scheduleDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        
+        // Verificar que no sea en el pasado
+        if (scheduleDateTime.getTime() < Date.now()) {
+            alert('No se puede programar en el pasado');
+            return;
         }
         
-        const { data, error } = await supabase
+        // Insertar en base de datos
+        const { data, error } = await window.supabaseClient
             .from('programacion')
-            .insert([
-                {
-                    zone_id: zoneId,
-                    scheduled_time: scheduledDateTime.toISOString(),
-                    duration: duration,
-                    executed: false
-                }
-            ]);
-            
+            .insert([{
+                zone_id: zoneId,
+                scheduled_time: scheduleDateTime.toISOString(),
+                duration: duration,
+                executed: false,
+                completed: false
+            }]);
+        
         if (error) throw error;
         
-        // Recargar programaciones del día
-        const dateKey = formatDateKey(selectedDate);
-        loadDaySchedules(dateKey);
+        // Cerrar modal y actualizar
+        closeDayModal();
+        await renderCalendar();
+        await loadMonthSchedules();
         
-        // Recargar programaciones del mes
-        loadMonthSchedules();
-        
-        // Limpiar formulario
-        event.target.reset();
-        
-        // Mostrar mensaje de éxito
-        showNotification('Programación guardada exitosamente', 'success');
+        alert('Programación guardada correctamente');
         
     } catch (error) {
-        console.error('Error guardando programación:', error);
-        showNotification('Error al guardar la programación', 'error');
+        console.error('Error al guardar programación:', error);
+        alert('Error al guardar la programación');
+    }
+}
+
+// Ejecutar riego ahora
+async function executeNow(scheduleId) {
+    try {
+        if (!window.supabaseClient) return;
+        
+        // Obtener datos de la programación
+        const { data: schedule, error } = await window.supabaseClient
+            .from('programacion')
+            .select('*')
+            .eq('id', scheduleId)
+            .single();
+        
+        if (error) throw error;
+        
+        // Iniciar el riego
+        await startIrrigationWithTimer(schedule);
+        
+        // Actualizar vista
+        await loadDaySchedules(selectedDate);
+        refreshActiveTimers();
+        
+    } catch (error) {
+        console.error('Error al ejecutar riego:', error);
+        alert('Error al ejecutar el riego');
+    }
+}
+
+// Iniciar riego con timer
+async function startIrrigationWithTimer(schedule) {
+    try {
+        const startTime = new Date();
+        
+        // Activar zona(s)
+        if (schedule.zone_id > 0) {
+            // Activar zona específica
+            const { error: zoneError } = await window.supabaseClient
+                .from('zonas')
+                .update({ active: true })
+                .eq('id', schedule.zone_id);
+            
+            if (zoneError) throw zoneError;
+        } else {
+            // Activar todas las zonas
+            const { error: zonesError } = await window.supabaseClient
+                .from('zonas')
+                .update({ active: true })
+                .gt('id', 0);
+            
+            if (zonesError) throw zonesError;
+        }
+        
+        // Actualizar control general
+        const { error: controlError } = await window.supabaseClient
+            .from('control')
+            .update({ estado: true })
+            .eq('id', 1);
+        
+        if (controlError) throw controlError;
+        
+        // Marcar como iniciado en la programación
+        const { error: scheduleError } = await window.supabaseClient
+            .from('programacion')
+            .update({
+                executed: true,
+                started_at: startTime.toISOString()
+            })
+            .eq('id', schedule.id);
+        
+        if (scheduleError) throw scheduleError;
+        
+        // Iniciar timer
+        if (irrigationTimer) {
+            await irrigationTimer.startIrrigation(schedule.id, schedule.zone_id, schedule.duration);
+        }
+        
+        console.log(`Riego iniciado: ${schedule.id}`);
+        
+    } catch (error) {
+        console.error('Error al iniciar riego:', error);
+        throw error;
+    }
+}
+
+// Detener riego
+async function stopIrrigation(scheduleId) {
+    try {
+        if (!confirm('¿Está seguro de que desea detener este riego?')) return;
+        
+        // Usar el timer para detener
+        if (irrigationTimer) {
+            await irrigationTimer.cancelTimer(`timer_${scheduleId}`);
+        }
+        
+        // Actualizar vista
+        await loadDaySchedules(selectedDate);
+        refreshActiveTimers();
+        
+    } catch (error) {
+        console.error('Error al detener riego:', error);
+        alert('Error al detener el riego');
     }
 }
 
 // Eliminar programación
 async function deleteSchedule(scheduleId) {
-    if (!confirm('¿Está seguro de que desea eliminar esta programación?')) {
-        return;
-    }
-    
     try {
-        // Verificar que supabase esté disponible
-        if (!supabase) {
-            throw new Error('Cliente de Supabase no está inicializado');
-        }
+        if (!confirm('¿Está seguro de que desea eliminar esta programación?')) return;
         
-        const { error } = await supabase
+        const { error } = await window.supabaseClient
             .from('programacion')
             .delete()
             .eq('id', scheduleId);
-            
+        
         if (error) throw error;
         
-        // Recargar programaciones
-        if (selectedDate) {
-            const dateKey = formatDateKey(selectedDate);
-            loadDaySchedules(dateKey);
-        }
-        loadMonthSchedules();
-        
-        showNotification('Programación eliminada exitosamente', 'success');
+        // Actualizar vista
+        await loadDaySchedules(selectedDate);
+        await renderCalendar();
+        await loadMonthSchedules();
         
     } catch (error) {
-        console.error('Error eliminando programación:', error);
-        showNotification('Error al eliminar la programación', 'error');
+        console.error('Error al eliminar programación:', error);
+        alert('Error al eliminar la programación');
     }
 }
 
-// Editar programación (funcionalidad básica)
-async function editSchedule(scheduleId) {
-    // Por simplicidad, por ahora solo permite cambiar la duración
-    const newDuration = prompt('Nueva duración en minutos:', '30');
-    
-    if (newDuration && !isNaN(newDuration) && parseInt(newDuration) > 0) {
-        try {
-            // Verificar que supabase esté disponible
-            if (!supabase) {
-                throw new Error('Cliente de Supabase no está inicializado');
-            }
-            
-            const { error } = await supabase
-                .from('programacion')
-                .update({ duration: parseInt(newDuration) })
-                .eq('id', scheduleId);
-                
-            if (error) throw error;
-            
-            // Recargar programaciones
-            if (selectedDate) {
-                const dateKey = formatDateKey(selectedDate);
-                loadDaySchedules(dateKey);
-            }
-            
-            showNotification('Programación actualizada exitosamente', 'success');
-            
-        } catch (error) {
-            console.error('Error actualizando programación:', error);
-            showNotification('Error al actualizar la programación', 'error');
-        }
+// Refrescar timers activos
+function refreshActiveTimers() {
+    if (irrigationTimer) {
+        irrigationTimer.refreshTimers();
+        updateTimersDisplay();
     }
 }
 
-// Mostrar programaciones de hoy
-function showTodaySchedule() {
-    const today = new Date();
-    selectedDate = today;
-    showDayScheduleModal(today);
-}
-
-// Mostrar próximos 7 días
-function showUpcomingSchedules() {
-    const modal = document.getElementById('quickActionModal');
-    const title = document.getElementById('quickActionTitle');
-    const content = document.getElementById('quickActionContent');
+// Actualizar visualización de timers en la página
+function updateTimersDisplay() {
+    const container = document.getElementById('programming-timers-container');
+    if (!container || !irrigationTimer) return;
     
-    title.textContent = 'Próximos 7 Días';
-    content.innerHTML = '<div class="loading">Cargando programaciones...</div>';
+    // Obtener timers activos
+    const activeTimers = irrigationTimer.activeTimers;
     
-    modal.style.display = 'flex';
+    if (activeTimers.size === 0) {
+        container.innerHTML = `
+            <div class="no-active-timers">
+                <i class="fas fa-clock"></i>
+                <p>No hay riegos activos en este momento</p>
+            </div>
+        `;
+        return;
+    }
     
-    loadUpcomingSchedules();
-}
-
-// Cargar próximas programaciones
-async function loadUpcomingSchedules() {
-    const today = new Date();
-    const nextWeek = new Date();
-    nextWeek.setDate(today.getDate() + 7);
-    
-    try {
-        // Verificar que supabase esté disponible
-        if (!supabase) {
-            throw new Error('Cliente de Supabase no está inicializado');
-        }
+    let html = '';
+    activeTimers.forEach((timerInfo, timerId) => {
+        const progress = Math.min(100, ((timerInfo.duration * 60 * 1000 - timerInfo.remainingTime) / (timerInfo.duration * 60 * 1000)) * 100);
         
-        const { data, error } = await supabase
-            .from('programacion')
-            .select(`
-                id, 
-                scheduled_time, 
-                duration, 
-                executed,
-                zonas:zone_id (id, name)
-            `)
-            .gte('scheduled_time', today.toISOString())
-            .lte('scheduled_time', nextWeek.toISOString())
-            .eq('executed', false)
-            .order('scheduled_time', { ascending: true });
-            
-        if (error) throw error;
-        
-        const content = document.getElementById('quickActionContent');
-        
-        if (data.length === 0) {
-            content.innerHTML = `
-                <div class="empty-schedules">
-                    <i class="fas fa-calendar-check"></i>
-                    <p>No hay riegos programados para los próximos 7 días</p>
-                </div>
-            `;
-        } else {
-            let html = '<div class="upcoming-schedules">';
-            
-            data.forEach(schedule => {
-                const date = new Date(schedule.scheduled_time);
-                const dateStr = date.toLocaleDateString('es-ES', { 
-                    weekday: 'short', 
-                    month: 'short', 
-                    day: 'numeric' 
-                });
-                const timeStr = date.toLocaleTimeString('es-ES', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                html += `
-                    <div class="schedule-item">
-                        <div class="schedule-info">
-                            <div class="schedule-time">${dateStr} - ${timeStr}</div>
-                            <div class="schedule-details">
-                                ${schedule.zonas?.name || 'Zona eliminada'} - ${schedule.duration} minutos
-                            </div>
-                        </div>
+        html += `
+            <div class="active-timer-item" id="prog-timer-${timerInfo.id}">
+                <div class="timer-info">
+                    <div class="timer-zone">
+                        <i class="fas fa-tint"></i>
+                        <span>${timerInfo.zoneName}</span>
                     </div>
-                `;
-            });
-            
-            html += '</div>';
-            content.innerHTML = html;
-        }
-    } catch (error) {
-        console.error('Error cargando próximas programaciones:', error);
-        const content = document.getElementById('quickActionContent');
-        content.innerHTML = '<div class="error-message">Error al cargar las programaciones</div>';
-    }
-}
-
-// Crear riego rápido
-function createQuickSchedule() {
-    const modal = document.getElementById('quickActionModal');
-    const title = document.getElementById('quickActionTitle');
-    const content = document.getElementById('quickActionContent');
-    
-    title.textContent = 'Riego Rápido';
-    
-    content.innerHTML = `
-        <form id="quickScheduleForm">
-            <p>Programa un riego para que inicie en los próximos minutos:</p>
-            
-            <div class="form-group">
-                <label for="quickZone">Zona de Riego:</label>
-                <select id="quickZone" required>
-                    <option value="">Seleccionar zona...</option>
-                </select>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="quickDelay">Iniciar en (minutos):</label>
-                    <input type="number" id="quickDelay" min="1" max="60" value="5" required>
+                    <div class="timer-time">
+                        <span class="timer-remaining">${formatTime(timerInfo.remainingTime)}</span>
+                        <span class="timer-total">/ ${timerInfo.duration}min</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="quickDuration">Duración (minutos):</label>
-                    <input type="number" id="quickDuration" min="5" max="120" value="15" required>
+                <div class="timer-progress">
+                    <div class="timer-progress-bar">
+                        <div class="timer-progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                </div>
+                <div class="timer-actions">
+                    <button class="timer-cancel-btn" onclick="stopIrrigation(${timerInfo.id})" title="Detener riego">
+                        <i class="fas fa-stop"></i>
+                    </button>
                 </div>
             </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn secondary" onclick="closeQuickActionModal()">
-                    Cancelar
-                </button>
-                <button type="submit" class="btn primary">
-                    <i class="fas fa-play"></i> Programar Riego
-                </button>
-            </div>
-        </form>
-    `;
-    
-    // Llenar select de zonas
-    const quickZoneSelect = content.querySelector('#quickZone');
-    zones.forEach(zone => {
-        const option = document.createElement('option');
-        option.value = zone.id;
-        option.textContent = zone.name;
-        quickZoneSelect.appendChild(option);
+        `;
     });
     
-    // Event listener para el formulario
-    content.querySelector('#quickScheduleForm').addEventListener('submit', handleQuickSchedule);
-    
-    modal.style.display = 'flex';
+    container.innerHTML = html;
 }
 
-// Manejar riego rápido
-async function handleQuickSchedule(event) {
-    event.preventDefault();
+// Formatear tiempo
+function formatTime(milliseconds) {
+    if (milliseconds <= 0) return '00:00';
     
-    const zoneId = parseInt(document.getElementById('quickZone').value);
-    const delay = parseInt(document.getElementById('quickDelay').value);
-    const duration = parseInt(document.getElementById('quickDuration').value);
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
     
-    // Calcular fecha y hora de inicio
-    const startTime = new Date();
-    startTime.setMinutes(startTime.getMinutes() + delay);
-    
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Cargar estadísticas del mes
+async function loadMonthSchedules() {
     try {
-        // Verificar que supabase esté disponible
-        if (!supabase) {
-            throw new Error('Cliente de Supabase no está inicializado');
-        }
+        const schedules = await getMonthSchedules();
         
-        const { data, error } = await supabase
-            .from('programacion')
-            .insert([
-                {
-                    zone_id: zoneId,
-                    scheduled_time: startTime.toISOString(),
-                    duration: duration,
-                    executed: false
-                }
-            ]);
-            
-        if (error) throw error;
+        const totalSchedules = schedules.length;
+        const executedSchedules = schedules.filter(s => s.completed).length;
+        const pendingSchedules = schedules.filter(s => !s.executed && !s.completed).length;
         
-        closeQuickActionModal();
-        loadMonthSchedules();
+        // Actualizar interfaz
+        const totalElement = document.getElementById('totalSchedules');
+        const executedElement = document.getElementById('executedSchedules');
+        const pendingElement = document.getElementById('pendingSchedules');
         
-        showNotification('Riego rápido programado exitosamente', 'success');
+        if (totalElement) totalElement.textContent = totalSchedules;
+        if (executedElement) executedElement.textContent = executedSchedules;
+        if (pendingElement) pendingElement.textContent = pendingSchedules;
         
     } catch (error) {
-        console.error('Error programando riego rápido:', error);
-        showNotification('Error al programar el riego rápido', 'error');
+        console.error('Error al cargar estadísticas:', error);
     }
 }
 
-// Cerrar modal de acciones rápidas
-function closeQuickActionModal() {
-    document.getElementById('quickActionModal').style.display = 'none';
+// Navegación del calendario
+function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    updateCalendarHeader();
+    renderCalendar();
+    loadMonthSchedules();
 }
 
-// Mostrar notificación
-function showNotification(message, type) {
-    // Crear elemento de notificación
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    // Estilos inline para la notificación
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 5px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        min-width: 300px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        ${type === 'success' ? 'background-color: var(--medium-green);' : 'background-color: #d9534f;'}
-    `;
-    
-    notification.querySelector('button').style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        margin-left: 15px;
-        padding: 0;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto-remover después de 5 segundos
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 5000);
+function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    updateCalendarHeader();
+    renderCalendar();
+    loadMonthSchedules();
 }
+
+// Cerrar modales
+function closeDayModal() {
+    const modal = document.getElementById('dayScheduleModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function closeQuickActionModal() {
+    const modal = document.getElementById('quickActionModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function closeModals() {
+    closeDayModal();
+    closeQuickActionModal();
+}
+
+// Acciones rápidas
+function showTodaySchedule() {
+    showDaySchedule(new Date());
+}
+
+function showUpcomingSchedules() {
+    // Implementar vista de próximos 7 días
+    alert('Función en desarrollo');
+}
+
+function createQuickSchedule() {
+    showDaySchedule(new Date());
+}
+
+// Actualizar timers cada segundo
+setInterval(() => {
+    if (irrigationTimer && irrigationTimer.activeTimers.size > 0) {
+        updateTimersDisplay();
+    }
+}, 1000);
