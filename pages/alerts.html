@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSync - Alertas del Sistema</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/alerts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Aqua<span>Sync</span></h1>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html">
+                    <div class="nav-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </a>
+                <a href="programming.html">
+                    <div class="nav-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Programación</span>
+                    </div>
+                </a>
+                <a href="zones.html">
+                    <div class="nav-item">
+                        <i class="fas fa-map-marked"></i>
+                        <span>Zonas de Riego</span>
+                    </div>
+                </a>
+                <a  href="statistics.html">
+                    <div class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Estadísticas</span>
+                    </div>
+                </a>
+                <div class="nav-item active">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="page-title">
+                    <h2>Centro de Alertas</h2>
+                </div>
+                <div class="user-menu">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
+                        <span class="badge">8</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas de Alertas -->
+            <div class="stats-grid">
+                <div class="stat-card stat-critical">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Alertas Críticas</div>
+                </div>
+                <div class="stat-card stat-warning">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Advertencias</div>
+                </div>
+                <div class="stat-card stat-info">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Informativas</div>
+                </div>
+                <div class="stat-card stat-success">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Resueltas Hoy</div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-controls">
+                <button class="filter-btn active">Todas</button>
+                <button class="filter-btn">Críticas</button>
+                <button class="filter-btn">Advertencias</button>
+                <button class="filter-btn">Informativas</button>
+                <button class="filter-btn">Clima</button>
+                <button class="filter-btn">Sistema</button>
+                <button class="filter-btn">Sensores</button>
+            </div>
+
+            <!-- Container de Alertas -->
+            <div class="alerts-container">
+                
+                <!-- Alertas Críticas -->
+                <div class="alerts-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-exclamation-triangle" style="color: #dc3545; margin-right: 10px;"></i>
+                            Alertas Críticas
+                        </h3>
+                        <span class="alerts-count" style="background-color: #dc3545;">2</span>
+                    </div>
+                    
+                    <div class="alert-item alert-critical">
+                        <div class="alert-icon">
+                            <i class="fas fa-tint-slash"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Sistema sin suministro de agua</div>
+                            <div class="alert-description">No se detecta presión de agua en el sistema principal. Revisar bomba y válvula general.</div>
+                            <div class="alert-time">Hace 15 minutos</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn action-btn">Revisar Sistema</button>
+                            <button class="alert-btn dismiss-btn">Descartar</button>
+                        </div>
+                    </div>
+
+                    <div class="alert-item alert-critical">
+                        <div class="alert-icon">
+                            <i class="fas fa-stop-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Riego detenido inesperadamente</div>
+                            <div class="alert-description">El riego programado en Zona Jardín Frontal se detuvo antes de completarse (2/15 min).</div>
+                            <div class="alert-time">Hace 32 minutos</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn action-btn">Reanudar Riego</button>
+                            <button class="alert-btn dismiss-btn">Descartar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advertencias -->
+                <div class="alerts-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-exclamation-circle" style="color: #ffc107; margin-right: 10px;"></i>
+                            Advertencias
+                        </h3>
+                        <span class="alerts-count" style="background-color: #ffc107;">3</span>
+                    </div>
+                    
+                    <div class="alert-item alert-warning">
+                        <div class="alert-icon">
+                            <i class="fas fa-thermometer-three-quarters"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Sensor de humedad al 90%</div>
+                            <div class="alert-description">La Zona Huerto registra 90% de humedad. Considerar reducir frecuencia de riego.</div>
+                            <div class="alert-time">Hace 1 hora</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn action-btn">Ajustar Programa</button>
+                            <button class="alert-btn dismiss-btn">Descartar</button>
+                        </div>
+                    </div>
+
+                    <div class="alert-item alert-warning">
+                        <div class="alert-icon">
+                            <i class="fas fa-thermometer-full"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Sensor de humedad al 100%</div>
+                            <div class="alert-description">La Zona Césped Lateral alcanzó saturación completa. Riego pausado automáticamente.</div>
+                            <div class="alert-time">Hace 2 horas</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn action-btn">Ver Zona</button>
+                            <button class="alert-btn dismiss-btn">Descartar</button>
+                        </div>
+                    </div>
+
+                    <div class="alert-item alert-warning">
+                        <div class="alert-icon">
+                            <i class="fas fa-cloud-rain"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Lluvia pronosticada</div>
+                            <div class="alert-description">Se esperan precipitaciones en las próximas 2 horas. Riego programado cancelado automáticamente.</div>
+                            <div class="alert-time">Hace 45 minutos</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn action-btn">Ver Pronóstico</button>
+                            <button class="alert-btn dismiss-btn">Descartar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas Informativas -->
+                <div class="alerts-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-info-circle" style="color: #17a2b8; margin-right: 10px;"></i>
+                            Informativas
+                        </h3>
+                        <span class="alerts-count" style="background-color: #17a2b8;">2</span>
+                    </div>
+                    
+                    <div class="alert-item alert-info">
+                        <div class="alert-icon">
+                            <i class="fas fa-cloud-rain"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Lluvia detectada</div>
+                            <div class="alert-description">Sensor de lluvia activado. Todos los riegos programados han sido pausados automáticamente.</div>
+                            <div class="alert-time">Hace 3 horas</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn action-btn">Ver Estado</button>
+                            <button class="alert-btn dismiss-btn">Descartar</button>
+                        </div>
+                    </div>
+
+                    <div class="alert-item alert-info">
+                        <div class="alert-icon">
+                            <i class="fas fa-thermometer-half"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Sensor de humedad al 80%</div>
+                            <div class="alert-description">La Zona Jardín Trasero alcanzó 80% de humedad. Nivel óptimo para las plantas establecidas.</div>
+                            <div class="alert-time">Hace 4 horas</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn action-btn">Ver Detalles</button>
+                            <button class="alert-btn dismiss-btn">Descartar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas Resueltas Recientes -->
+                <div class="alerts-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-check-circle" style="color: var(--medium-green); margin-right: 10px;"></i>
+                            Resueltas Recientemente
+                        </h3>
+                        <span class="alerts-count" style="background-color: var(--medium-green);">1</span>
+                    </div>
+                    
+                    <div class="alert-item alert-success">
+                        <div class="alert-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">Fallo de riego resuelto</div>
+                            <div class="alert-description">El problema en la Zona Jardín Frontal fue solucionado. Sistema funcionando normalmente.</div>
+                            <div class="alert-time">Resuelto hace 1 hora</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn dismiss-btn">Archivar</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funciones básicas para la demostración (sin funcionalidad real)
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                console.log('Filtro seleccionado:', this.textContent);
+            });
+        });
+
+        document.querySelectorAll('.dismiss-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const alertItem = this.closest('.alert-item');
+                alertItem.style.opacity = '0.5';
+                setTimeout(() => {
+                    alertItem.style.display = 'none';
+                }, 300);
+                console.log('Alerta descartada');
+            });
+        });
+
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                console.log('Acción ejecutada:', this.textContent);
+                alert('Función "' + this.textContent + '" aún no implementada');
+            });
+        });
+    </script>
+</body>
+</html>

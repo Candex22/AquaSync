@@ -60,6 +60,7 @@ body {
 .nav-item.active {
     background-color: var(--light-brown);
     border-left: 4px solid var(--medium-green);
+    color: var(--cream);
 }
 
 .nav-item:hover {
@@ -69,6 +70,11 @@ body {
 .nav-item i {
     margin-right: 10px;
     font-size: 18px;
+}
+
+a{
+    text-decoration: none ;
+    color: #eee2d1;
 }
 
 /* Main Content Styles */
