@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../styles/style.css">
     <link rel="stylesheet" href="../styles/statistics.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -38,7 +39,7 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Estadísticas</span>
                 </div>
-                <a  href="alerts.html">
+                <a href="alerts.html">
                     <div class="nav-item">
                         <i class="fas fa-bell"></i>
                         <span>Alertas</span>
@@ -58,9 +59,9 @@
                 <div class="user-menu">
                     <div class="stats-filters">
                         <select class="filter-select">
-                            <option>Últimos 7 días</option>
-                            <option>Últimos 30 días</option>
-                            <option>Último año</option>
+                            <option value="last7days">Últimos 7 días</option>
+                            <option value="last30days">Últimos 30 días</option>
+                            <option value="lastyear">Último año</option>
                         </select>
                     </div>
                     <div class="notification-icon">
@@ -78,54 +79,54 @@
             
             <!-- KPI Cards -->
             <div class="kpi-grid">
-                <div class="kpi-card">
+                <div class="kpi-card" data-kpi="water">
                     <div class="kpi-icon">
                         <i class="fas fa-tint"></i>
                     </div>
                     <div class="kpi-content">
-                        <div class="kpi-value">2,450L</div>
+                        <div class="kpi-value">-</div>
                         <div class="kpi-label">Agua Utilizada</div>
-                        <div class="kpi-change positive">
-                            <i class="fas fa-arrow-up"></i> +12%
+                        <div class="kpi-change">
+                            <i class="fas fa-arrow-up"></i> -
                         </div>
                     </div>
                 </div>
                 
-                <div class="kpi-card">
+                <div class="kpi-card" data-kpi="energy">
                     <div class="kpi-icon energy">
                         <i class="fas fa-bolt"></i>
                     </div>
                     <div class="kpi-content">
-                        <div class="kpi-value">48.5 kWh</div>
+                        <div class="kpi-value">-</div>
                         <div class="kpi-label">Energía Consumida</div>
-                        <div class="kpi-change negative">
-                            <i class="fas fa-arrow-down"></i> -8%
+                        <div class="kpi-change">
+                            <i class="fas fa-arrow-up"></i> -
                         </div>
                     </div>
                 </div>
                 
-                <div class="kpi-card">
+                <div class="kpi-card" data-kpi="efficiency">
                     <div class="kpi-icon efficiency">
                         <i class="fas fa-leaf"></i>
                     </div>
                     <div class="kpi-content">
-                        <div class="kpi-value">94%</div>
+                        <div class="kpi-value">-</div>
                         <div class="kpi-label">Eficiencia</div>
-                        <div class="kpi-change positive">
-                            <i class="fas fa-arrow-up"></i> +3%
+                        <div class="kpi-change">
+                            <i class="fas fa-arrow-up"></i> -
                         </div>
                     </div>
                 </div>
                 
-                <div class="kpi-card">
+                <div class="kpi-card" data-kpi="savings">
                     <div class="kpi-icon savings">
                         <i class="fas fa-dollar-sign"></i>
                     </div>
                     <div class="kpi-content">
-                        <div class="kpi-value">$320</div>
+                        <div class="kpi-value">-</div>
                         <div class="kpi-label">Ahorro Mensual</div>
-                        <div class="kpi-change positive">
-                            <i class="fas fa-arrow-up"></i> +15%
+                        <div class="kpi-change">
+                            <i class="fas fa-arrow-up"></i> -
                         </div>
                     </div>
                 </div>
@@ -134,24 +135,18 @@
             <!-- Charts Grid -->
             <div class="charts-grid">
                 <!-- Water Usage Chart -->
-                <div class="chart-widget">
+                <div class="chart-widget" data-chart="water-usage">
                     <div class="widget-header">
                         <h3 class="widget-title">Consumo de Agua</h3>
                         <div class="widget-actions">
-                            <button><i class="fas fa-download"></i></button>
+                            <button data-download="water-usage"><i class="fas fa-download"></i></button>
                             <button><i class="fas fa-expand"></i></button>
                         </div>
                     </div>
                     <div class="chart-container">
                         <div class="chart-placeholder">
                             <div class="chart-bars">
-                                <div class="bar" style="height: 60%;"></div>
-                                <div class="bar" style="height: 80%;"></div>
-                                <div class="bar" style="height: 45%;"></div>
-                                <div class="bar" style="height: 95%;"></div>
-                                <div class="bar" style="height: 70%;"></div>
-                                <div class="bar" style="height: 55%;"></div>
-                                <div class="bar" style="height: 85%;"></div>
+                                <!-- Los datos se cargarán dinámicamente -->
                             </div>
                             <div class="chart-legend">
                                 <div class="legend-item">
@@ -164,53 +159,29 @@
                 </div>
                 
                 <!-- Zone Performance Chart -->
-                <div class="chart-widget">
+                <div class="chart-widget" data-chart="zone-performance">
                     <div class="widget-header">
                         <h3 class="widget-title">Rendimiento por Zona</h3>
                         <div class="widget-actions">
-                            <button><i class="fas fa-download"></i></button>
+                            <button data-download="zone-performance"><i class="fas fa-download"></i></button>
                             <button><i class="fas fa-expand"></i></button>
                         </div>
                     </div>
                     <div class="chart-container">
                         <div class="donut-chart">
                             <div class="donut-center">
-                                <div class="donut-value">8</div>
+                                <div class="donut-value">-</div>
                                 <div class="donut-label">Zonas Activas</div>
                             </div>
                         </div>
                         <div class="zone-stats">
-                            <div class="zone-stat-item">
-                                <div class="zone-color zone-1"></div>
-                                <span class="zone-name">Zona Norte</span>
-                                <span class="zone-percentage">25%</span>
-                            </div>
-                            <div class="zone-stat-item">
-                                <div class="zone-color zone-2"></div>
-                                <span class="zone-name">Zona Sur</span>
-                                <span class="zone-percentage">20%</span>
-                            </div>
-                            <div class="zone-stat-item">
-                                <div class="zone-color zone-3"></div>
-                                <span class="zone-name">Zona Este</span>
-                                <span class="zone-percentage">18%</span>
-                            </div>
-                            <div class="zone-stat-item">
-                                <div class="zone-color zone-4"></div>
-                                <span class="zone-name">Zona Oeste</span>
-                                <span class="zone-percentage">15%</span>
-                            </div>
-                            <div class="zone-stat-item">
-                                <div class="zone-color zone-5"></div>
-                                <span class="zone-name">Otras</span>
-                                <span class="zone-percentage">22%</span>
-                            </div>
+                            <!-- Los datos se cargarán dinámicamente -->
                         </div>
                     </div>
                 </div>
                 
                 <!-- Temperature & Humidity Trend -->
-                <div class="chart-widget wide">
+                <div class="chart-widget wide" data-chart="environmental">
                     <div class="widget-header">
                         <h3 class="widget-title">Tendencias Ambientales</h3>
                         <div class="chart-tabs">
@@ -219,7 +190,7 @@
                             <button class="tab-btn">Presión</button>
                         </div>
                         <div class="widget-actions">
-                            <button><i class="fas fa-download"></i></button>
+                            <button data-download="environmental"><i class="fas fa-download"></i></button>
                             <button><i class="fas fa-expand"></i></button>
                         </div>
                     </div>
@@ -233,19 +204,8 @@
                                 <div class="grid-line"></div>
                             </div>
                             <svg class="chart-svg" viewBox="0 0 400 200">
-                                <path class="chart-line temperature" d="M 20 180 Q 100 150 180 120 T 360 100" stroke="var(--medium-green)" stroke-width="3" fill="none"/>
-                                <path class="chart-line humidity" d="M 20 160 Q 100 140 180 110 T 360 80" stroke="var(--light-brown)" stroke-width="3" fill="none" opacity="0.7"/>
+                                <!-- Los datos se cargarán dinámicamente -->
                             </svg>
-                        </div>
-                        <div class="chart-legend horizontal">
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: var(--medium-green);"></div>
-                                <span>Temperatura (°C)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: var(--light-brown);"></div>
-                                <span>Humedad (%)</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -267,47 +227,13 @@
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Zona</th>
-                                    <th>Duration</th>
+                                    <th>Duración</th>
                                     <th>Litros</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>12/06/2025 06:00</td>
-                                    <td>Zona Norte</td>
-                                    <td>45 min</td>
-                                    <td>320L</td>
-                                    <td><span class="status-badge completed">Completado</span></td>
-                                </tr>
-                                <tr>
-                                    <td>12/06/2025 18:30</td>
-                                    <td>Zona Sur</td>
-                                    <td>30 min</td>
-                                    <td>245L</td>
-                                    <td><span class="status-badge completed">Completado</span></td>
-                                </tr>
-                                <tr>
-                                    <td>11/06/2025 06:15</td>
-                                    <td>Zona Este</td>
-                                    <td>25 min</td>
-                                    <td>180L</td>
-                                    <td><span class="status-badge failed">Fallido</span></td>
-                                </tr>
-                                <tr>
-                                    <td>11/06/2025 19:00</td>
-                                    <td>Zona Oeste</td>
-                                    <td>40 min</td>
-                                    <td>290L</td>
-                                    <td><span class="status-badge completed">Completado</span></td>
-                                </tr>
-                                <tr>
-                                    <td>10/06/2025 07:30</td>
-                                    <td>Zona Norte</td>
-                                    <td>35 min</td>
-                                    <td>265L</td>
-                                    <td><span class="status-badge completed">Completado</span></td>
-                                </tr>
+                                <!-- Los datos se cargarán dinámicamente -->
                             </tbody>
                         </table>
                     </div>
@@ -322,37 +248,15 @@
                         </div>
                     </div>
                     <div class="alerts-container">
-                        <div class="alert-item warning">
-                            <div class="alert-icon">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="alert-content">
-                                <div class="alert-title">Presión de agua baja</div>
-                                <div class="alert-time">Hace 2 horas</div>
-                            </div>
-                        </div>
-                        <div class="alert-item info">
-                            <div class="alert-icon">
-                                <i class="fas fa-info-circle"></i>
-                            </div>
-                            <div class="alert-content">
-                                <div class="alert-title">Mantenimiento programado</div>
-                                <div class="alert-time">Mañana 09:00</div>
-                            </div>
-                        </div>
-                        <div class="alert-item success">
-                            <div class="alert-icon">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="alert-content">
-                                <div class="alert-title">Ciclo de riego completado</div>
-                                <div class="alert-time">Hace 4 horas</div>
-                            </div>
-                        </div>
+                        <!-- Los datos se cargarán dinámicamente -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Scripts -->
+    <script src="../src/supabase-config.js"></script>
+    <script src="../src/statistics.js"></script>
 </body>
 </html>
