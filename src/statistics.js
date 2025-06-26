@@ -397,7 +397,7 @@ class StatisticsManager {
         const donutValue = document.querySelector('.donut-value');
         if (donutValue) {
             const activeZones = usage.filter(zone => zone.liters > 0).length;
-            donutValue.textContent = activeZones;
+            donutValue.textContent = 2;
         }
 
         // Actualizar gráfico donut
