@@ -168,7 +168,7 @@ El sistema incluye una maqueta funcional con:
 
 ## 👥 Equipo de Desarrollo
 
-**Autores**: Candela Molinari, Máximo Mayorga, Thomas Fricker, Maximiliano Soto de la Colina, Agustín Di Tomaso
+**Autores**: Candela Molinari, Máximo Mayorga
 
 **Institución**: Escuela de Educación Secundaria Técnica N.º 1 de Vicente López "Eduardo Ader"
 
