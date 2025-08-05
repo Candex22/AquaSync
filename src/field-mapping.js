@@ -1,8 +1,8 @@
 // Variables globales
 let gridSize = 10; // Tamaño del grid por defecto
-let sprinklerType = 'medium'; // Tipo de aspersor seleccionado
-let sprinklerRadius = 2; // Radio de cobertura (en celdas)
-let fieldType = 'futbol'; // Tipo de campo seleccionado
+let sprinklerType = 'large'; // Tipo de aspersor seleccionado
+let sprinklerRadius = 3; // Radio de cobertura (en celdas)
+let fieldType = 'rugby'; // Tipo de campo seleccionado
 let sprinklers = []; // Array para almacenar los aspersores
 let sprinklerId = 1; // Contador para IDs de aspersores
 let selectedSprinkler = null; // Aspersor seleccionado para editar
