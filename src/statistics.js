@@ -1,5 +1,3 @@
-// statistics.js - Sistema de estadísticas para AquaSync con Supabase
-
 class StatisticsManager {
     constructor() {
         this.supabase = null;

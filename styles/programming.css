@@ -1,5 +1,3 @@
-/* Estilos específicos para la página de programación */
-
 .calendar-container {
     display: grid;
     grid-template-columns: 2fr 1fr;
