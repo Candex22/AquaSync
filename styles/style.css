@@ -76,6 +76,26 @@ a{
     text-decoration: none ;
     color: #eee2d1;
 }
+/* Media Query for Mobile */
+@media screen and (max-width: 768px) {
+  .sidebar {
+    width: 250px;
+    padding: 0;
+    /* The transform property is now defined above to slide in/out */
+  }
+
+  /* Display the burger icon on mobile */
+  .menu-toggle {
+    display: block;
+  }
+
+  /* Adjustments to fixed elements for mobile */
+  .logo, .nav-menu {
+    position: static;
+    padding: 20px 0;
+    margin: 0;
+  }
+}
 
 /* Main Content Styles */
 .main-content {

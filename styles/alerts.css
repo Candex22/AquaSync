@@ -228,3 +228,43 @@
 .stat-success .stat-number {
     color: var(--medium-green);
 }
+
+@media screen and (max-width: 768px) {
+
+  .alerts-container {
+    padding: 0 10px; 
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-item {
+    flex-direction: column; 
+    align-items: flex-start; 
+    padding: 15px;
+  }
+
+  .alert-icon {
+    margin-right: 0;
+    margin-bottom: 10px; 
+    font-size: 20px; 
+  }
+
+  .alert-actions {
+    margin-top: 15px; 
+    margin-left: 0; 
+    width: 100%;
+    justify-content: flex-start; 
+  }
+
+  .filter-controls {
+    flex-direction: column; 
+    gap: 10px;
+  }
+
+  .filter-btn {
+    width: 100%; 
+    text-align: center;
+  }
+}
