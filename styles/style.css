@@ -601,3 +601,97 @@ a{
         grid-column: span 1;
     }
 }
+
+a{
+    text-decoration: none ;
+    color: #eee2d1;
+}
+
+/* Menu Toggle Button (Hidden on desktop) */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background-color: var(--dark-brown);
+    color: var(--cream);
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+.menu-toggle i {
+    font-size: 20px;
+}
+
+.menu-toggle:hover {
+    background-color: var(--light-brown);
+}
+
+.menu-toggle.active {
+    background-color: var(--light-brown);
+}
+
+/* Media Query for Mobile */
+@media screen and (max-width: 768px) {
+    /* Show menu toggle button */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Sidebar adjustments for mobile */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        width: 250px;
+        height: 100vh;
+        padding: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+    }
+
+    /* Show sidebar when active */
+    .sidebar.active {
+        left: 0;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Adjustments to fixed elements for mobile */
+    .logo {
+        position: static;
+        padding: 20px;
+        margin-top: 0;
+    }
+
+    .nav-menu {
+        position: static;
+        padding: 0;
+        margin-top: 0;
+    }
+
+    /* Adjust main content padding for mobile */
+    .main-content {
+        padding: 80px 15px 20px 15px;
+    }
+
+    /* Overlay cuando el menú está abierto */
+    .sidebar.active::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.3);
+        z-index: -1;
+    }
+}

@@ -108,7 +108,7 @@ function updateWeatherUI() {
             </div>
             <div class="weather-detail-item">
                 <div class="weather-detail-value">${weatherData.weather[0].main === 'Rain' ?
-                    'Sí' : '0%'}</div>
+                'Sí' : '0%'}</div>
                 <div class="weather-detail-label">Lluvia</div>
             </div>
         `;
