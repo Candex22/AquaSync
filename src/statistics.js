@@ -457,16 +457,42 @@ class StatisticsManager {
             'presión': 'pressure'
         };
         const field = fieldMap[type] || 'temperature';
+        
+        // Unidades según el tipo
+        const unitMap = {
+            'temperatura': '°C',
+            'humedad': '%',
+            'presión': 'hPa'
+        };
+        const unit = unitMap[type] || '';
 
         // Crear path para el gráfico de líneas
         const validData = data.filter(item => item[field] !== null && item[field] !== undefined);
         if (validData.length === 0) return;
 
+        const maxValue = Math.max(...validData.map(d => d[field] || 0));
+        const minValue = Math.min(...validData.map(d => d[field] || 0));
+        const range = maxValue - minValue || 1;
+
+        // Agregar etiquetas del eje Y
+        const numLabels = 5;
+        for (let i = 0; i < numLabels; i++) {
+            const value = minValue + (range * i / (numLabels - 1));
+            const y = height - padding - ((value - minValue) / range) * (height - 2 * padding);
+            
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', padding - 10);
+            text.setAttribute('y', y + 5);
+            text.setAttribute('text-anchor', 'end');
+            text.setAttribute('fill', 'var(--light-brown)');
+            text.setAttribute('font-size', '12');
+            text.textContent = value.toFixed(1) + unit;
+            
+            svg.appendChild(text);
+        }
+
         const points = validData.map((item, index) => {
             const x = padding + (index / (validData.length - 1)) * (width - 2 * padding);
-            const maxValue = Math.max(...validData.map(d => d[field] || 0));
-            const minValue = Math.min(...validData.map(d => d[field] || 0));
-            const range = maxValue - minValue || 1;
             const y = height - padding - ((item[field] - minValue) / range) * (height - 2 * padding);
             return `${x},${y}`;
         });
@@ -485,9 +511,6 @@ class StatisticsManager {
         // Agregar puntos interactivos
         validData.forEach((item, index) => {
             const x = padding + (index / (validData.length - 1)) * (width - 2 * padding);
-            const maxValue = Math.max(...validData.map(d => d[field] || 0));
-            const minValue = Math.min(...validData.map(d => d[field] || 0));
-            const range = maxValue - minValue || 1;
             const y = height - padding - ((item[field] - minValue) / range) * (height - 2 * padding);
 
             const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -496,8 +519,35 @@ class StatisticsManager {
             circle.setAttribute('r', '4');
             circle.setAttribute('fill', 'var(--medium-green)');
             circle.setAttribute('class', 'chart-point');
-            circle.setAttribute('data-value', item[field]);
+            circle.setAttribute('data-value', item[field] + unit);
             circle.setAttribute('data-date', new Date(item.timestamp).toLocaleDateString('es-ES'));
+
+            // Tooltip en hover
+            circle.addEventListener('mouseenter', (e) => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'chart-tooltip';
+                tooltip.textContent = `${e.target.dataset.date}: ${e.target.dataset.value}`;
+                tooltip.style.cssText = `
+                    position: fixed;
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    z-index: 1000;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(tooltip);
+
+                const rect = e.target.getBoundingClientRect();
+                tooltip.style.left = rect.left + 'px';
+                tooltip.style.top = (rect.top - 35) + 'px';
+            });
+
+            circle.addEventListener('mouseleave', () => {
+                const tooltip = document.querySelector('.chart-tooltip');
+                if (tooltip) tooltip.remove();
+            });
 
             svg.appendChild(circle);
         });
