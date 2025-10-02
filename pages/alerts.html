@@ -7,14 +7,17 @@
     <link rel="stylesheet" href="../styles/style.css">
     <link rel="stylesheet" href="../styles/alerts.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="../src/menu.js"></script>    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../src/supabase-config.js"></script>
+    <script src="../src/menu.js"></script>
+    <script src="../src/alerts.js"></script>
 </head>
 <body>
     <div class="container">
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
         </button>
-        <!-- Sidebar Navigation -->
+        
         <div class="sidebar" id="sidebar">
             <div class="logo">
                 <h1>Aqua<span>Sync</span></h1>
@@ -38,7 +41,7 @@
                         <span>Zonas de Riego</span>
                     </div>
                 </a>
-                <a  href="statistics.html">
+                <a href="statistics.html">
                     <div class="nav-item">
                         <i class="fas fa-chart-line"></i>
                         <span>Estadísticas</span>
@@ -51,9 +54,7 @@
             </div>
         </div>
         
-        <!-- Main Content Area -->
         <div class="main-content">
-            <!-- Header -->
             <div class="header">
                 <div class="page-title">
                     <h2>Centro de Alertas</h2>
@@ -61,7 +62,7 @@
                 <div class="user-menu">
                     <div class="notification-icon">
                         <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
-                        <span class="badge">8</span>
+                        <span class="badge">0</span>
                     </div>
                     <div class="user-info">
                         <div class="user-avatar">
@@ -72,223 +73,304 @@
                 </div>
             </div>
 
-            <!-- Estadísticas de Alertas -->
             <div class="stats-grid">
                 <div class="stat-card stat-critical">
-                    <div class="stat-number">2</div>
+                    <div class="stat-number" id="stat-critical">0</div>
                     <div class="stat-label">Alertas Críticas</div>
                 </div>
                 <div class="stat-card stat-warning">
-                    <div class="stat-number">3</div>
+                    <div class="stat-number" id="stat-warning">0</div>
                     <div class="stat-label">Advertencias</div>
                 </div>
                 <div class="stat-card stat-info">
-                    <div class="stat-number">2</div>
+                    <div class="stat-number" id="stat-info">0</div>
                     <div class="stat-label">Informativas</div>
                 </div>
                 <div class="stat-card stat-success">
-                    <div class="stat-number">1</div>
+                    <div class="stat-number" id="stat-success">0</div>
                     <div class="stat-label">Resueltas Hoy</div>
                 </div>
             </div>
 
-            <!-- Container de Alertas -->
-            <div class="alerts-container">
-                
-                <!-- Alertas Críticas -->
-                <div class="alerts-section">
-                    <div class="section-header">
-                        <h3 class="section-title">
-                            <i class="fas fa-exclamation-triangle" style="color: #dc3545; margin-right: 10px;"></i>
-                            Alertas Críticas
-                        </h3>
-                        <span class="alerts-count" style="background-color: #dc3545;">2</span>
-                    </div>
-                    
-                    <div class="alert-item alert-critical">
-                        <div class="alert-icon">
-                            <i class="fas fa-tint-slash"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Sistema sin suministro de agua</div>
-                            <div class="alert-description">No se detecta presión de agua en el sistema principal. Revisar bomba y válvula general.</div>
-                            <div class="alert-time">Hace 15 minutos</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn action-btn">Revisar Sistema</button>
-                            <button class="alert-btn dismiss-btn">Descartar</button>
-                        </div>
-                    </div>
+            <div class="filter-controls">
+                <button class="filter-btn active" data-filter="all">Todas</button>
+                <button class="filter-btn" data-filter="critical">Críticas</button>
+                <button class="filter-btn" data-filter="warning">Advertencias</button>
+                <button class="filter-btn" data-filter="info">Informativas</button>
+                <button class="filter-btn" data-filter="success">Resueltas</button>
+            </div>
 
-                    <div class="alert-item alert-critical">
-                        <div class="alert-icon">
-                            <i class="fas fa-stop-circle"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Riego detenido inesperadamente</div>
-                            <div class="alert-description">El riego programado en Zona Jardín Frontal se detuvo antes de completarse (2/15 min).</div>
-                            <div class="alert-time">Hace 32 minutos</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn action-btn">Reanudar Riego</button>
-                            <button class="alert-btn dismiss-btn">Descartar</button>
-                        </div>
-                    </div>
+            <div class="alerts-container" id="alertsContainer">
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando alertas...</p>
                 </div>
-
-                <!-- Advertencias -->
-                <div class="alerts-section">
-                    <div class="section-header">
-                        <h3 class="section-title">
-                            <i class="fas fa-exclamation-circle" style="color: #ffc107; margin-right: 10px;"></i>
-                            Advertencias
-                        </h3>
-                        <span class="alerts-count" style="background-color: #ffc107;">3</span>
-                    </div>
-                    
-                    <div class="alert-item alert-warning">
-                        <div class="alert-icon">
-                            <i class="fas fa-thermometer-three-quarters"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Sensor de humedad al 90%</div>
-                            <div class="alert-description">La Zona Huerto registra 90% de humedad. Considerar reducir frecuencia de riego.</div>
-                            <div class="alert-time">Hace 1 hora</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn action-btn">Ajustar Programa</button>
-                            <button class="alert-btn dismiss-btn">Descartar</button>
-                        </div>
-                    </div>
-
-                    <div class="alert-item alert-warning">
-                        <div class="alert-icon">
-                            <i class="fas fa-thermometer-full"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Sensor de humedad al 100%</div>
-                            <div class="alert-description">La Zona Césped Lateral alcanzó saturación completa. Riego pausado automáticamente.</div>
-                            <div class="alert-time">Hace 2 horas</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn action-btn">Ver Zona</button>
-                            <button class="alert-btn dismiss-btn">Descartar</button>
-                        </div>
-                    </div>
-
-                    <div class="alert-item alert-warning">
-                        <div class="alert-icon">
-                            <i class="fas fa-cloud-rain"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Lluvia pronosticada</div>
-                            <div class="alert-description">Se esperan precipitaciones en las próximas 2 horas. Riego programado cancelado automáticamente.</div>
-                            <div class="alert-time">Hace 45 minutos</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn action-btn">Ver Pronóstico</button>
-                            <button class="alert-btn dismiss-btn">Descartar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Alertas Informativas -->
-                <div class="alerts-section">
-                    <div class="section-header">
-                        <h3 class="section-title">
-                            <i class="fas fa-info-circle" style="color: #17a2b8; margin-right: 10px;"></i>
-                            Informativas
-                        </h3>
-                        <span class="alerts-count" style="background-color: #17a2b8;">2</span>
-                    </div>
-                    
-                    <div class="alert-item alert-info">
-                        <div class="alert-icon">
-                            <i class="fas fa-cloud-rain"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Lluvia detectada</div>
-                            <div class="alert-description">Sensor de lluvia activado. Todos los riegos programados han sido pausados automáticamente.</div>
-                            <div class="alert-time">Hace 3 horas</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn action-btn">Ver Estado</button>
-                            <button class="alert-btn dismiss-btn">Descartar</button>
-                        </div>
-                    </div>
-
-                    <div class="alert-item alert-info">
-                        <div class="alert-icon">
-                            <i class="fas fa-thermometer-half"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Sensor de humedad al 80%</div>
-                            <div class="alert-description">La Zona Jardín Trasero alcanzó 80% de humedad. Nivel óptimo para las plantas establecidas.</div>
-                            <div class="alert-time">Hace 4 horas</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn action-btn">Ver Detalles</button>
-                            <button class="alert-btn dismiss-btn">Descartar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Alertas Resueltas Recientes -->
-                <div class="alerts-section">
-                    <div class="section-header">
-                        <h3 class="section-title">
-                            <i class="fas fa-check-circle" style="color: var(--medium-green); margin-right: 10px;"></i>
-                            Resueltas Recientemente
-                        </h3>
-                        <span class="alerts-count" style="background-color: var(--medium-green);">1</span>
-                    </div>
-                    
-                    <div class="alert-item alert-success">
-                        <div class="alert-icon">
-                            <i class="fas fa-tools"></i>
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">Fallo de riego resuelto</div>
-                            <div class="alert-description">El problema en la Zona Jardín Frontal fue solucionado. Sistema funcionando normalmente.</div>
-                            <div class="alert-time">Resuelto hace 1 hora</div>
-                        </div>
-                        <div class="alert-actions">
-                            <button class="alert-btn dismiss-btn">Archivar</button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
 
     <script>
-        // Funciones básicas para la demostración (sin funcionalidad real)
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                console.log('Filtro seleccionado:', this.textContent);
-            });
+        let currentFilter = 'all';
+        let alertsData = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Inicializando página de alertas...');
+            await waitForAlertsManager();
+            setupEventListeners();
+            loadAlertsPage();
+            setInterval(loadAlertsPage, 30000);
         });
 
-        document.querySelectorAll('.dismiss-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const alertItem = this.closest('.alert-item');
-                alertItem.style.opacity = '0.5';
-                setTimeout(() => {
-                    alertItem.style.display = 'none';
-                }, 300);
-                console.log('Alerta descartada');
+        function waitForAlertsManager() {
+            return new Promise((resolve) => {
+                const checkManager = () => {
+                    if (window.alertsManager) {
+                        resolve();
+                    } else {
+                        setTimeout(checkManager, 100);
+                    }
+                };
+                checkManager();
             });
-        });
+        }
 
-        document.querySelectorAll('.action-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                console.log('Acción ejecutada:', this.textContent);
-                alert('Función "' + this.textContent + '" aún no implementada');
+        function setupEventListeners() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    renderAlerts();
+                });
             });
-        });
+
+            if (window.alertsManager) {
+                window.alertsManager.addListener((alerts) => {
+                    alertsData = alerts;
+                    renderAlerts();
+                    updateStats();
+                });
+            }
+        }
+
+        async function loadAlertsPage() {
+            if (!window.alertsManager) return;
+            try {
+                await window.alertsManager.loadAlerts();
+                alertsData = window.alertsManager.getActiveAlerts();
+                renderAlerts();
+                updateStats();
+            } catch (error) {
+                console.error('Error cargando alertas:', error);
+                showError('Error al cargar las alertas');
+            }
+        }
+
+        function renderAlerts() {
+            const container = document.getElementById('alertsContainer');
+            let filteredAlerts = alertsData;
+            
+            if (currentFilter !== 'all') {
+                filteredAlerts = alertsData.filter(alert => {
+                    if (currentFilter === 'success') {
+                        return alert.resolved || alert.type === 'success';
+                    }
+                    return alert.type === currentFilter;
+                });
+            }
+
+            const groupedAlerts = {
+                critical: filteredAlerts.filter(a => a.type === 'critical'),
+                warning: filteredAlerts.filter(a => a.type === 'warning'),
+                info: filteredAlerts.filter(a => a.type === 'info'),
+                success: filteredAlerts.filter(a => a.resolved || a.type === 'success')
+            };
+
+            container.innerHTML = '';
+
+            if (filteredAlerts.length === 0) {
+                container.innerHTML = `
+                    <div class="no-alerts">
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>No hay alertas ${currentFilter !== 'all' ? 'en esta categoría' : ''}</h3>
+                        <p>El sistema está funcionando correctamente</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (groupedAlerts.critical.length > 0) {
+                container.appendChild(createAlertSection('critical', 'Alertas Críticas', groupedAlerts.critical));
+            }
+            if (groupedAlerts.warning.length > 0) {
+                container.appendChild(createAlertSection('warning', 'Advertencias', groupedAlerts.warning));
+            }
+            if (groupedAlerts.info.length > 0) {
+                container.appendChild(createAlertSection('info', 'Informativas', groupedAlerts.info));
+            }
+            if (groupedAlerts.success.length > 0) {
+                container.appendChild(createAlertSection('success', 'Resueltas Recientemente', groupedAlerts.success));
+            }
+        }
+
+        function createAlertSection(type, title, alerts) {
+            const section = document.createElement('div');
+            section.className = 'alerts-section';
+            
+            const iconMap = {
+                critical: 'fa-exclamation-triangle',
+                warning: 'fa-exclamation-circle',
+                info: 'fa-info-circle',
+                success: 'fa-check-circle'
+            };
+
+            const colorMap = {
+                critical: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8',
+                success: 'var(--medium-green)'
+            };
+
+            section.innerHTML = `
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas ${iconMap[type]}" style="color: ${colorMap[type]}; margin-right: 10px;"></i>
+                        ${title}
+                    </h3>
+                    <span class="alerts-count" style="background-color: ${colorMap[type]};">${alerts.length}</span>
+                </div>
+            `;
+
+            alerts.forEach(alert => {
+                section.appendChild(createAlertItem(alert));
+            });
+
+            return section;
+        }
+
+        function createAlertItem(alert) {
+            const item = document.createElement('div');
+            item.className = `alert-item alert-${alert.type}`;
+            
+            const iconMap = {
+                critical: 'fa-tint-slash',
+                warning: 'fa-thermometer-three-quarters',
+                info: 'fa-cloud-rain',
+                success: 'fa-tools'
+            };
+
+            const timeAgo = getTimeAgo(alert.created_at);
+
+            item.innerHTML = `
+                <div class="alert-icon">
+                    <i class="fas ${iconMap[alert.type] || 'fa-bell'}"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title">${alert.title}</div>
+                    <div class="alert-description">${alert.description}</div>
+                    <div class="alert-time">${timeAgo}</div>
+                </div>
+                <div class="alert-actions">
+                    ${!alert.resolved ? `
+                        <button class="alert-btn action-btn" onclick="handleAlertAction(${alert.id}, '${getAlertAction(alert)}')">
+                            ${getAlertActionText(alert)}
+                        </button>
+                    ` : ''}
+                    <button class="alert-btn dismiss-btn" onclick="dismissAlert(${alert.id})">
+                        ${alert.resolved ? 'Archivar' : 'Descartar'}
+                    </button>
+                </div>
+            `;
+
+            return item;
+        }
+
+        function getAlertAction(alert) {
+            if (alert.alert_code === 'unexpected_stop' || alert.alert_code === 'no_water_supply') {
+                return 'check_system';
+            }
+            if (alert.alert_code === 'high_humidity_90' || alert.alert_code === 'saturation') {
+                return 'adjust_schedule';
+            }
+            if (alert.alert_code === 'low_humidity') {
+                return 'restart_irrigation';
+            }
+            return 'view_zone';
+        }
+
+        function getAlertActionText(alert) {
+            if (alert.alert_code === 'unexpected_stop' || alert.alert_code === 'no_water_supply') {
+                return 'Revisar Sistema';
+            }
+            if (alert.alert_code === 'high_humidity_90' || alert.alert_code === 'saturation') {
+                return 'Ajustar Programa';
+            }
+            if (alert.alert_code === 'low_humidity') {
+                return 'Reanudar Riego';
+            }
+            return 'Ver Detalles';
+        }
+
+        async function dismissAlert(alertId) {
+            if (!window.alertsManager) return;
+            try {
+                await window.alertsManager.dismissAlert(alertId);
+            } catch (error) {
+                console.error('Error descartando alerta:', error);
+                showError('Error al descartar la alerta');
+            }
+        }
+
+        async function handleAlertAction(alertId, action) {
+            if (!window.alertsManager) return;
+            try {
+                await window.alertsManager.performAlertAction(alertId, action);
+            } catch (error) {
+                console.error('Error ejecutando acción:', error);
+            }
+        }
+
+        function updateStats() {
+            if (!window.alertsManager) return;
+            const stats = window.alertsManager.getAlertStats();
+            
+            document.getElementById('stat-critical').textContent = stats.critical;
+            document.getElementById('stat-warning').textContent = stats.warning;
+            document.getElementById('stat-info').textContent = stats.info;
+            document.getElementById('stat-success').textContent = stats.success;
+        }
+
+        function getTimeAgo(dateString) {
+            const now = new Date();
+            const date = new Date(dateString);
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Hace un momento';
+            if (diffMins < 60) return `Hace ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
+            if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+            return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #dc3545;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                z-index: 10000;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            `;
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
     </script>
 </body>
 </html>

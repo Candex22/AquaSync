@@ -1,86 +1,104 @@
 // Variables globales
 let gridSize = 10; // Tamaño del grid por defecto
-let sprinklerType = 'large'; // Tipo de aspersor seleccionado
-let sprinklerRadius = 3; // Radio de cobertura (en celdas)
-let fieldType = 'rugby'; // Tipo de campo seleccionado
+let fieldType = 'futbol'; // Tipo de campo seleccionado
 let sprinklers = []; // Array para almacenar los aspersores
 let sprinklerId = 1; // Contador para IDs de aspersores
-let selectedSprinkler = null; // Aspersor seleccionado para editar
+
+// Configuración por defecto desde Supabase
+const defaultSprinklers = [
+    {
+        id: 1,
+        name: 'Aspersor 1',
+        type: 'large',
+        radius: 3,
+        row: 2,
+        col: 3,
+        zone: 1,
+        active: true
+    },
+    {
+        id: 2,
+        name: 'Aspersor 2',
+        type: 'large',
+        radius: 3,
+        row: 2,
+        col: 1,
+        zone: 2,
+        active: true
+    }
+];
 
 // Referencias a elementos DOM
 const fieldMap = document.getElementById('field-map');
 const gridOverlay = document.getElementById('grid-overlay');
 const sprinklersLayer = document.getElementById('sprinklers-layer');
 const coverageLayer = document.getElementById('coverage-layer');
-const fieldTypeSelect = document.getElementById('field-type');
-const gridSizeSelect = document.getElementById('grid-size');
-const sprinklerTypeSelect = document.getElementById('sprinkler-type');
 const sprinklerCountDisplay = document.getElementById('sprinkler-count');
 const coveragePercentDisplay = document.getElementById('coverage-percent');
 const zonesCountDisplay = document.getElementById('zones-count');
 const sprinklerList = document.getElementById('sprinkler-list');
-const btnSaveMap = document.getElementById('btn-save-map');
-const btnClearMap = document.getElementById('btn-clear-map');
 const btnDownloadConfig = document.getElementById('btn-download-config');
-
-// Modal
-const sprinklerModal = document.getElementById('sprinkler-modal');
-const closeModal = document.querySelector('.close-modal');
-const editSprinklerId = document.getElementById('edit-sprinkler-id');
-const editSprinklerName = document.getElementById('edit-sprinkler-name');
-const editSprinklerType = document.getElementById('edit-sprinkler-type');
-const editSprinklerZone = document.getElementById('edit-sprinkler-zone');
-const btnUpdateSprinkler = document.getElementById('btn-update-sprinkler');
-const btnDeleteSprinkler = document.getElementById('btn-delete-sprinkler');
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
-    // Crear el grid inicial
-    initializeGrid();
+    // Cargar configuración desde Supabase
+    loadFromSupabase();
     
-    // Event listeners para controles
-    fieldTypeSelect.addEventListener('change', changeFieldType);
-    gridSizeSelect.addEventListener('change', changeGridSize);
-    sprinklerTypeSelect.addEventListener('change', changeSprinklerType);
-    btnSaveMap.addEventListener('click', saveFieldConfiguration);
-    btnClearMap.addEventListener('click', clearField);
+    // Event listeners solo para descarga
     btnDownloadConfig.addEventListener('click', downloadConfiguration);
-    
-    // Event listeners para el modal
-    closeModal.addEventListener('click', () => sprinklerModal.style.display = 'none');
-    btnUpdateSprinkler.addEventListener('click', updateSprinkler);
-    btnDeleteSprinkler.addEventListener('click', deleteSprinkler);
-    
-    // Cerrar modal al hacer clic fuera
-    window.addEventListener('click', (e) => {
-        if (e.target === sprinklerModal) {
-            sprinklerModal.style.display = 'none';
-        }
-    });
-    
-    // Cargar configuración guardada (si existe)
-    loadSavedConfiguration();
 });
 
 /**
- * Inicializa el grid en el campo
+ * Carga la configuración desde Supabase
+ */
+async function loadFromSupabase() {
+    try {
+        // Intentar cargar desde Supabase
+        if (typeof supabase !== 'undefined') {
+            const { data, error } = await supabase
+                .from('field_configuration')
+                .select('*')
+                .single();
+            
+            if (data && !error) {
+                fieldType = data.field_type || 'futbol';
+                gridSize = data.grid_size || 10;
+                sprinklers = data.sprinklers || defaultSprinklers;
+                sprinklerId = Math.max(...sprinklers.map(s => s.id)) + 1;
+                
+                fieldMap.className = `field-map ${fieldType}`;
+                initializeGrid();
+                updateSprinklerList();
+                updateStats();
+                return;
+            }
+        }
+    } catch (error) {
+        console.log('Usando configuración por defecto');
+    }
+    
+    // Si no hay datos en Supabase, usar configuración por defecto
+    sprinklers = defaultSprinklers;
+    sprinklerId = 3;
+    initializeGrid();
+    updateSprinklerList();
+    updateStats();
+}
+
+/**
+ * Inicializa el grid en el campo (SOLO VISUALIZACIÓN)
  */
 function initializeGrid() {
     // Limpiar grid existente
     gridOverlay.innerHTML = '';
     
-    // Crear celdas del grid
+    // Crear celdas del grid (SOLO VISUALIZACIÓN - sin eventos de clic)
     for (let row = 0; row < gridSize; row++) {
         for (let col = 0; col < gridSize; col++) {
             const cell = document.createElement('div');
-            cell.className = 'grid-cell';
+            cell.className = 'grid-cell grid-cell-readonly';
             cell.dataset.row = row;
             cell.dataset.col = col;
-            
-            // Event listener para colocar aspersores al hacer clic
-            cell.addEventListener('click', (e) => {
-                placeSprinkler(row, col);
-            });
             
             gridOverlay.appendChild(cell);
         }
@@ -95,86 +113,7 @@ function initializeGrid() {
 }
 
 /**
- * Cambia el tipo de campo (fútbol o rugby)
- */
-function changeFieldType() {
-    fieldType = fieldTypeSelect.value;
-    
-    // Actualizar clase CSS del campo
-    fieldMap.className = `field-map ${fieldType}`;
-    
-    // Recalcular coberturas
-    updateCoverageLayer();
-}
-
-/**
- * Cambia el tamaño del grid
- */
-function changeGridSize() {
-    const newSize = parseInt(gridSizeSelect.value);
-    
-    // Si hay aspersores colocados, confirmar antes de cambiar
-    if (sprinklers.length > 0) {
-        if (!confirm('Cambiar el tamaño del grid eliminará todos los aspersores colocados. ¿Desea continuar?')) {
-            // Restaurar valor anterior
-            gridSizeSelect.value = gridSize;
-            return;
-        }
-        // Limpiar aspersores
-        clearField();
-    }
-    
-    // Actualizar tamaño
-    gridSize = newSize;
-    
-    // Reinicializar grid
-    initializeGrid();
-}
-
-/**
- * Cambia el tipo de aspersor seleccionado
- */
-function changeSprinklerType() {
-    sprinklerType = sprinklerTypeSelect.value;
-    sprinklerRadius = parseInt(sprinklerTypeSelect.options[sprinklerTypeSelect.selectedIndex].dataset.radius);
-}
-
-/**
- * Coloca un aspersor en una posición del grid
- */
-function placeSprinkler(row, col) {
-    // Verificar si ya hay un aspersor en esa posición
-    const existingSprinkler = sprinklers.find(s => s.row === row && s.col === col);
-    
-    if (existingSprinkler) {
-        // Si ya existe, seleccionarlo para editar
-        openEditModal(existingSprinkler);
-        return;
-    }
-    
-    // Crear nuevo aspersor
-    const sprinkler = {
-        id: sprinklerId++,
-        name: `Aspersor ${sprinklerId - 1}`,
-        type: sprinklerType,
-        radius: sprinklerRadius,
-        row: row,
-        col: col,
-        zone: 1, // Zona por defecto
-        active: true
-    };
-    
-    // Añadir al array
-    sprinklers.push(sprinkler);
-    
-    // Actualizar visualización
-    updateFieldVisualization();
-    updateSprinklerList();
-    updateStats();
-}
-
-/**
- * Actualiza la visualización del campo y los aspersores
+ * Actualiza la visualización del campo y los aspersores (SOLO LECTURA)
  */
 function updateFieldVisualization() {
     // Limpiar capas
@@ -183,7 +122,7 @@ function updateFieldVisualization() {
     // Actualizar coberturas
     updateCoverageLayer();
     
-    // Colocar aspersores
+    // Colocar aspersores (sin interacción)
     sprinklers.forEach(sprinkler => {
         // Calcular posición en píxeles
         const cellWidth = fieldMap.offsetWidth / gridSize;
@@ -194,20 +133,16 @@ function updateFieldVisualization() {
         
         // Crear elemento visual del aspersor
         const sprinklerElement = document.createElement('div');
-        sprinklerElement.className = `sprinkler ${sprinkler.type}`;
+        sprinklerElement.className = `sprinkler ${sprinkler.type} sprinkler-readonly`;
         sprinklerElement.dataset.id = sprinkler.id;
         sprinklerElement.style.left = `${posX}px`;
         sprinklerElement.style.top = `${posY}px`;
+        sprinklerElement.style.cursor = 'default';
         
         // Icono para el aspersor
         const icon = document.createElement('i');
         icon.className = 'fas fa-tint';
         sprinklerElement.appendChild(icon);
-        
-        // Event listener para editar
-        sprinklerElement.addEventListener('click', () => {
-            openEditModal(sprinkler);
-        });
         
         sprinklersLayer.appendChild(sprinklerElement);
     });
@@ -266,7 +201,7 @@ function updateCoverageLayer() {
 }
 
 /**
- * Actualiza la lista de aspersores en la tabla
+ * Actualiza la lista de aspersores en la tabla (SOLO VISUALIZACIÓN)
  */
 function updateSprinklerList() {
     // Limpiar lista
@@ -276,16 +211,16 @@ function updateSprinklerList() {
         // Mostrar mensaje si no hay aspersores
         const emptyRow = document.createElement('tr');
         emptyRow.className = 'empty-message';
-        emptyRow.innerHTML = '<td colspan="5">No hay aspersores colocados en el campo</td>';
+        emptyRow.innerHTML = '<td colspan="4">No hay aspersores colocados en el campo</td>';
         sprinklerList.appendChild(emptyRow);
         return;
     }
     
-    // Crear filas para cada aspersor
+    // Crear filas para cada aspersor (SIN BOTONES DE ACCIÓN)
     sprinklers.forEach(sprinkler => {
         const row = document.createElement('tr');
         
-        // ID y nombre
+        // ID
         const idCell = document.createElement('td');
         idCell.textContent = sprinkler.id;
         row.appendChild(idCell);
@@ -311,29 +246,6 @@ function updateSprinklerList() {
         zoneCell.textContent = `Zona ${sprinkler.zone}`;
         row.appendChild(zoneCell);
         
-        // Acciones
-        const actionsCell = document.createElement('td');
-        
-        // Botón editar
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn-edit-sprinkler';
-        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-        editBtn.addEventListener('click', () => openEditModal(sprinkler));
-        actionsCell.appendChild(editBtn);
-        
-        // Botón eliminar
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-delete-sprinkler';
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        deleteBtn.addEventListener('click', () => {
-            if (confirm(`¿Está seguro de eliminar el aspersor #${sprinkler.id}?`)) {
-                deleteSprinklerById(sprinkler.id);
-            }
-        });
-        actionsCell.appendChild(deleteBtn);
-        
-        row.appendChild(actionsCell);
-        
         sprinklerList.appendChild(row);
     });
 }
@@ -350,7 +262,6 @@ function updateStats() {
     zonesCountDisplay.textContent = uniqueZones.length;
     
     // Calcular porcentaje de cobertura aproximado
-    // Esto es una aproximación simplificada
     calculateCoveragePercentage();
 }
 
@@ -358,9 +269,6 @@ function updateStats() {
  * Calcula el porcentaje de cobertura aproximado
  */
 function calculateCoveragePercentage() {
-    // Esta es una aproximación. En un sistema real, se debería
-    // calcular con más precisión la superposición de áreas
-    
     // Crear una matriz para representar el campo
     const fieldMatrix = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
     
@@ -398,158 +306,6 @@ function calculateCoveragePercentage() {
     
     // Actualizar display
     coveragePercentDisplay.textContent = `${coveragePercent}%`;
-}
-
-/**
- * Abre el modal para editar un aspersor
- */
-function openEditModal(sprinkler) {
-    selectedSprinkler = sprinkler;
-    
-    // Llenar el formulario con los datos del aspersor
-    editSprinklerId.value = sprinkler.id;
-    editSprinklerName.value = sprinkler.name;
-    editSprinklerType.value = sprinkler.type;
-    editSprinklerZone.value = sprinkler.zone;
-    
-    // Mostrar modal
-    sprinklerModal.style.display = 'flex';
-}
-
-/**
- * Actualiza los datos de un aspersor
- */
-function updateSprinkler() {
-    if (!selectedSprinkler) return;
-    
-    // Actualizar datos
-    selectedSprinkler.name = editSprinklerName.value;
-    
-    // Si el tipo cambió, actualizar radio
-    if (selectedSprinkler.type !== editSprinklerType.value) {
-        selectedSprinkler.type = editSprinklerType.value;
-        
-        // Actualizar radio basado en el tipo
-        switch(selectedSprinkler.type) {
-            case 'small':
-                selectedSprinkler.radius = 1;
-                break;
-            case 'medium':
-                selectedSprinkler.radius = 2;
-                break;
-            case 'large':
-                selectedSprinkler.radius = 3;
-                break;
-        }
-    }
-    
-    selectedSprinkler.zone = parseInt(editSprinklerZone.value);
-    
-    // Actualizar visualización
-    updateFieldVisualization();
-    updateSprinklerList();
-    updateStats();
-    
-    // Cerrar modal
-    sprinklerModal.style.display = 'none';
-}
-
-/**
- * Elimina un aspersor por su ID
- */
-function deleteSprinklerById(id) {
-    const index = sprinklers.findIndex(s => s.id === id);
-    if (index !== -1) {
-        sprinklers.splice(index, 1);
-        
-        // Actualizar visualización
-        updateFieldVisualization();
-        updateSprinklerList();
-        updateStats();
-    }
-}
-
-/**
- * Elimina el aspersor seleccionado
- */
-function deleteSprinkler() {
-    if (!selectedSprinkler) return;
-    
-    // Confirmar eliminación
-    if (confirm(`¿Está seguro de eliminar el aspersor #${selectedSprinkler.id}?`)) {
-        deleteSprinklerById(selectedSprinkler.id);
-        
-        // Cerrar modal
-        sprinklerModal.style.display = 'none';
-    }
-}
-
-/**
- * Guarda la configuración actual en localStorage
- */
-function saveFieldConfiguration() {
-    const configuration = {
-        fieldType: fieldType,
-        gridSize: gridSize,
-        sprinklers: sprinklers,
-        nextSprinklerId: sprinklerId
-    };
-    
-    // Guardar en localStorage
-    localStorage.setItem('aquaSync_fieldConfig', JSON.stringify(configuration));
-    
-    // También se podría enviar a un servidor mediante la API de Supabase
-    // Para este ejemplo, usamos solo localStorage
-    
-    alert('Configuración guardada correctamente');
-}
-
-/**
- * Carga la configuración guardada
- */
-function loadSavedConfiguration() {
-    const savedConfig = localStorage.getItem('aquaSync_fieldConfig');
-    
-    if (!savedConfig) return;
-    
-    try {
-        const config = JSON.parse(savedConfig);
-        
-        // Restaurar tipo de campo
-        fieldType = config.fieldType;
-        fieldTypeSelect.value = fieldType;
-        fieldMap.className = `field-map ${fieldType}`;
-        
-        // Restaurar tamaño del grid
-        gridSize = config.gridSize;
-        gridSizeSelect.value = gridSize;
-        
-        // Restaurar aspersores
-        sprinklers = config.sprinklers;
-        sprinklerId = config.nextSprinklerId || (sprinklers.length + 1);
-        
-        // Actualizar visualización
-        initializeGrid();
-        updateSprinklerList();
-        updateStats();
-        
-    } catch (error) {
-        console.error('Error al cargar la configuración:', error);
-    }
-}
-
-/**
- * Limpia todos los aspersores del campo
- */
-function clearField() {
-    if (sprinklers.length === 0) return;
-    
-    if (confirm('¿Está seguro de eliminar todos los aspersores del campo?')) {
-        sprinklers = [];
-        updateFieldVisualization();
-        updateSprinklerList();
-        updateStats();
-    }
 }
 
 /**
