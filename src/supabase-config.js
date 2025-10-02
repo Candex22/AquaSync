@@ -1,4 +1,3 @@
-// supabase-config.js
 const SUPABASE_URL = 'https://fqauhrsdburhobgllhyf.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXVocnNkYnVyaG9iZ2xsaHlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3NDIyOTIsImV4cCI6MjA2MjMxODI5Mn0.9iu9D8MbHk5IFjd6S_p8YV9AKhqdHLDapsh2s4syUCE';
 

@@ -1,6 +1,3 @@
-// alerts-manager.js
-// Sistema centralizado de gestión de alertas para AquaSync
-
 class AlertsManager {
     constructor() {
         this.supabase = null;
