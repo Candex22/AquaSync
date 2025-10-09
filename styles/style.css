@@ -142,24 +142,6 @@ a{
     font-size: 12px;
 }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--light-brown);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 10px;
-    color: white;
-}
-
 /* Dashboard Widgets */
 .dashboard-grid {
     display: grid;
