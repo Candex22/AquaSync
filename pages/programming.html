@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,8 +13,9 @@
     <script src="../src/supabase-config.js"></script>
     <script src="../src/programming.js"></script>
     <script src="../src/menu.js"></script>
-    <script src="../src/alerts.js"></script>    
+    <script src="../src/alerts.js"></script>
 </head>
+
 <body>
     <div class="container">
         <button class="menu-toggle" id="menuToggle">
@@ -41,13 +43,13 @@
                         <span>Zonas de Riego</span>
                     </div>
                 </a>
-                <a  href="statistics.html">
+                <a href="statistics.html">
                     <div class="nav-item">
                         <i class="fas fa-chart-line"></i>
                         <span>Estadísticas</span>
                     </div>
                 </a>
-                <a  href="alerts.html">
+                <a href="alerts.html">
                     <div class="nav-item">
                         <i class="fas fa-bell"></i>
                         <span>Alertas</span>
@@ -55,7 +57,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- Main Content Area -->
         <div class="main-content">
             <!-- Header with Page Title and User Menu -->
@@ -80,7 +82,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="calendar">
                         <div class="calendar-header">
                             <div class="day-header">Dom</div>
@@ -156,7 +158,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <div class="modal-body">
                 <!-- Programaciones existentes -->
                 <div class="existing-schedules">
@@ -166,7 +168,6 @@
                     </div>
                 </div>
 
-                <!-- Formulario para nueva programación -->
                 <div class="new-schedule-form">
                     <h4>Agregar Nueva Programación</h4>
                     <form id="scheduleForm">
@@ -180,12 +181,44 @@
                                 <input type="number" id="scheduleDuration" min="5" max="120" value="30" required>
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="scheduleZone">Zona de Riego:</label>
                             <select id="scheduleZone" required>
                                 <option value="">Seleccionar zona...</option>
                             </select>
+                        </div>
+
+                        <!-- Nueva sección de recurrencia -->
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="isRecurring">
+                            <label for="isRecurring">
+                                <i class="fas fa-repeat"></i> Hacer este riego recurrente
+                            </label>
+                        </div>
+
+                        <div id="recurringOptions" style="display: none;">
+                            <div class="form-group">
+                                <label for="recurringType">
+                                    <i class="fas fa-calendar-alt"></i> Frecuencia:
+                                </label>
+                                <select id="recurringType">
+                                    <option value="weekly">Semanal (cada 7 días)</option>
+                                    <option value="biweekly">Quincenal (cada 14 días)</option>
+                                    <option value="monthly">Mensual (mismo día cada mes)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="recurringEndDate">
+                                    <i class="fas fa-calendar-check"></i> Repetir hasta (opcional):
+                                </label>
+                                <input type="date" id="recurringEndDate">
+                                <div class="info-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Si no especificas una fecha, se programará hasta fin del año siguiente
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-actions">
@@ -219,4 +252,5 @@
         </div>
     </div>
 </body>
+
 </html>

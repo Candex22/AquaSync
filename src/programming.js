@@ -33,6 +33,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     
     document.getElementById('scheduleForm').addEventListener('submit', handleScheduleSubmit);
+    
+    // Event listener para mostrar/ocultar opciones de recurrencia
+    document.getElementById('isRecurring').addEventListener('change', function() {
+        const recurringOptions = document.getElementById('recurringOptions');
+        recurringOptions.style.display = this.checked ? 'block' : 'none';
+    });
 });
 
 // Inicializar el calendario
@@ -161,6 +167,7 @@ function showDayScheduleModal(date) {
     
     // Limpiar formulario
     document.getElementById('scheduleForm').reset();
+    document.getElementById('recurringOptions').style.display = 'none';
     
     // Mostrar modal
     modal.style.display = 'flex';
@@ -330,16 +337,47 @@ function updateScheduleStats(data) {
     document.getElementById('pendingSchedules').textContent = pending;
 }
 
+// Generar fechas recurrentes
+function generateRecurringDates(startDate, recurringType, recurringEndDate) {
+    const dates = [];
+    let currentDate = new Date(startDate);
+    const endDate = recurringEndDate ? new Date(recurringEndDate) : new Date(startDate.getFullYear() + 1, 11, 31); // Fin del año siguiente por defecto
+    
+    while (currentDate <= endDate) {
+        dates.push(new Date(currentDate));
+        
+        switch (recurringType) {
+            case 'weekly':
+                // Agregar 7 días
+                currentDate.setDate(currentDate.getDate() + 7);
+                break;
+            case 'biweekly':
+                // Agregar 14 días
+                currentDate.setDate(currentDate.getDate() + 14);
+                break;
+            case 'monthly':
+                // Mismo día del siguiente mes
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                break;
+            default:
+                // Si no hay tipo válido, salir del loop
+                return dates;
+        }
+    }
+    
+    return dates;
+}
+
 // Manejar envío del formulario de programación
 async function handleScheduleSubmit(event) {
     event.preventDefault();
     
     if (!selectedDate) return;
     
-    const formData = new FormData(event.target);
     const time = document.getElementById('scheduleTime').value;
     const duration = parseInt(document.getElementById('scheduleDuration').value);
     const zoneId = parseInt(document.getElementById('scheduleZone').value);
+    const isRecurring = document.getElementById('isRecurring').checked;
     
     // Crear fecha y hora completa
     const scheduledDateTime = new Date(selectedDate);
@@ -352,18 +390,50 @@ async function handleScheduleSubmit(event) {
             throw new Error('Cliente de Supabase no está inicializado');
         }
         
-        const { data, error } = await supabase
-            .from('programacion')
-            .insert([
-                {
-                    zone_id: zoneId,
-                    scheduled_time: scheduledDateTime.toISOString(),
-                    duration: duration,
-                    executed: false
-                }
-            ]);
+        if (isRecurring) {
+            const recurringType = document.getElementById('recurringType').value;
+            const recurringEndDate = document.getElementById('recurringEndDate').value;
             
-        if (error) throw error;
+            // Generar todas las fechas recurrentes
+            const dates = generateRecurringDates(
+                scheduledDateTime, 
+                recurringType, 
+                recurringEndDate ? new Date(recurringEndDate) : null
+            );
+            
+            // Crear array de programaciones
+            const schedules = dates.map(date => ({
+                zone_id: zoneId,
+                scheduled_time: date.toISOString(),
+                duration: duration,
+                executed: false
+            }));
+            
+            // Insertar todas las programaciones
+            const { data, error } = await supabase
+                .from('programacion')
+                .insert(schedules);
+                
+            if (error) throw error;
+            
+            showNotification(`${dates.length} programaciones recurrentes guardadas exitosamente`, 'success');
+        } else {
+            // Programación única
+            const { data, error } = await supabase
+                .from('programacion')
+                .insert([
+                    {
+                        zone_id: zoneId,
+                        scheduled_time: scheduledDateTime.toISOString(),
+                        duration: duration,
+                        executed: false
+                    }
+                ]);
+                
+            if (error) throw error;
+            
+            showNotification('Programación guardada exitosamente', 'success');
+        }
         
         // Recargar programaciones del día
         const dateKey = formatDateKey(selectedDate);
@@ -374,9 +444,7 @@ async function handleScheduleSubmit(event) {
         
         // Limpiar formulario
         event.target.reset();
-        
-        // Mostrar mensaje de éxito
-        showNotification('Programación guardada exitosamente', 'success');
+        document.getElementById('recurringOptions').style.display = 'none';
         
     } catch (error) {
         console.error('Error guardando programación:', error);
