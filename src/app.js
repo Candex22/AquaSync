@@ -518,7 +518,11 @@ function updateScheduleUI(scheduleItems) {
         <div class="widget-header">
             <h3 class="widget-title">Próximos Riegos</h3>
             <div class="widget-actions">
-                <button><i class="fas fa-calendar"></i></button>
+                <a href="pages/programming.html" class="notification-link">
+                    <button><i class="fas fa-calendar"></i></button>                                            </a>
+                </a>
+                <button onclick="loadScheduledIrrigation()"><i class="fas fa-sync-alt"></i></button>
+                <button onclick="showScheduleForm()"><i class="fas fa-plus"></i></button>
             </div>
         </div>
     `;
