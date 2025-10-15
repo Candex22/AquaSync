@@ -448,11 +448,17 @@ class StatisticsManager {
         }
 
         const svg = document.querySelector('.chart-svg');
-        if (!svg) return;
+        const container = document.querySelector('.line-chart'); // Obtener el contenedor principal
 
-        const width = 400;
-        const height = 200;
-        const padding = 40;
+        if (!svg || !container) return;
+
+        // Obtener dimensiones reales del contenedor
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        const padding = 50;
+
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.setAttribute('preserveAspectRatio', 'none'); 
 
         // Limpiar SVG
         svg.innerHTML = '';
@@ -473,9 +479,11 @@ class StatisticsManager {
         };
         const unit = unitMap[type] || '';
 
-        // Crear path para el gráfico de líneas
         const validData = data.filter(item => item[field] !== null && item[field] !== undefined);
-        if (validData.length === 0) return;
+        if (validData.length === 0) {
+             svg.innerHTML = `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" fill="var(--dark-brown)">No hay datos ambientales disponibles</text>`;
+             return;
+        }
 
         const maxValue = Math.max(...validData.map(d => d[field] || 0));
         const minValue = Math.min(...validData.map(d => d[field] || 0));
@@ -498,6 +506,7 @@ class StatisticsManager {
             svg.appendChild(text);
         }
 
+        // Calcular puntos (x/y)
         const points = validData.map((item, index) => {
             const x = padding + (index / (validData.length - 1)) * (width - 2 * padding);
             const y = height - padding - ((item[field] - minValue) / range) * (height - 2 * padding);
@@ -515,48 +524,86 @@ class StatisticsManager {
 
         svg.appendChild(path);
 
-        // Agregar puntos interactivos
-        validData.forEach((item, index) => {
+      validData.forEach((item, index) => {
             const x = padding + (index / (validData.length - 1)) * (width - 2 * padding);
             const y = height - padding - ((item[field] - minValue) / range) * (height - 2 * padding);
 
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', x);
-            circle.setAttribute('cy', y);
-            circle.setAttribute('r', '4');
-            circle.setAttribute('fill', 'var(--medium-green)');
-            circle.setAttribute('class', 'chart-point');
-            circle.setAttribute('data-value', item[field] + unit);
-            circle.setAttribute('data-date', new Date(item.timestamp).toLocaleDateString('es-ES'));
+            // 1. Círculo Visual (lo que el usuario ve)
+            const visualCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            visualCircle.setAttribute('cx', x);
+            visualCircle.setAttribute('cy', y);
+            visualCircle.setAttribute('r', 4); // Radio visual base
+            visualCircle.setAttribute('fill', 'var(--medium-green)');
+            visualCircle.setAttribute('stroke', 'white');
+            visualCircle.setAttribute('stroke-width', 2);
+            visualCircle.setAttribute('pointer-events', 'none'); // IMPORTANTE: no captura eventos, solo es visual
 
-            // Tooltip en hover
-            circle.addEventListener('mouseenter', (e) => {
+            // 2. Círculo de Detección de Eventos (hit area)
+            const hitCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            hitCircle.setAttribute('cx', x);
+            hitCircle.setAttribute('cy', y);
+            hitCircle.setAttribute('r', 10); // Radio más grande para fácil detección
+            hitCircle.setAttribute('fill', 'transparent'); // Transparente para no cubrir el gráfico
+            hitCircle.setAttribute('cursor', 'pointer');
+            hitCircle.setAttribute('pointer-events', 'all'); // CRÍTICO: Asegura que SÍ captura el evento
+
+            // 3. Establecer Datos
+            const dateStr = item.date;
+            const valueStr = item[field] !== null && item[field] !== undefined ? item[field].toFixed(1) : 'N/A';
+            
+            hitCircle.setAttribute('data-date', dateStr);
+            hitCircle.setAttribute('data-value', valueStr);
+            hitCircle.dataset.type = type; // Guardamos el tipo para obtener la unidad
+
+            // 4. Lógica del Hover
+            const unit = unitMap[type] || '';
+
+            hitCircle.addEventListener('mouseenter', (e) => {
+                // Efecto visual: Aumenta y cambia el color del círculo visual
+                visualCircle.setAttribute('r', 6);
+                visualCircle.setAttribute('fill', 'var(--dark-brown)'); 
+
+                // Creación del Tooltip
                 const tooltip = document.createElement('div');
                 tooltip.className = 'chart-tooltip';
-                tooltip.textContent = `${e.target.dataset.date}: ${e.target.dataset.value}`;
+                
+                const date = new Date(e.target.dataset.date).toLocaleDateString();
+                
+                tooltip.textContent = `${date}: ${e.target.dataset.value}${unit}`;
+                
                 tooltip.style.cssText = `
-                    position: fixed;
-                    background: rgba(0,0,0,0.8);
+                    position: fixed; 
+                    background: var(--dark-brown);
                     color: white;
-                    padding: 8px 12px;
-                    border-radius: 6px;
-                    font-size: 12px;
+                    padding: 6px 10px;
+                    border-radius: 5px;
+                    font-size: 13px;
                     z-index: 1000;
                     pointer-events: none;
+                    transform: translateX(-50%);
+                    white-space: nowrap;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                 `;
                 document.body.appendChild(tooltip);
 
+                // Posicionamiento
                 const rect = e.target.getBoundingClientRect();
-                tooltip.style.left = rect.left + 'px';
-                tooltip.style.top = (rect.top - 35) + 'px';
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px'; 
+                tooltip.style.top = (rect.top - 35) + 'px'; 
             });
 
-            circle.addEventListener('mouseleave', () => {
+            hitCircle.addEventListener('mouseleave', () => {
+                // Restaurar el aspecto visual
+                visualCircle.setAttribute('r', 4);
+                visualCircle.setAttribute('fill', 'var(--medium-green)');
+
                 const tooltip = document.querySelector('.chart-tooltip');
                 if (tooltip) tooltip.remove();
             });
 
-            svg.appendChild(circle);
+            // Agregar ambos círculos (Visual primero, Detección encima)
+            svg.appendChild(visualCircle);
+            svg.appendChild(hitCircle); 
         });
     }
 
