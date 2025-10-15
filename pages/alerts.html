@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +13,17 @@
     <script src="../src/menu.js"></script>
     <script src="../src/alerts.js"></script>
 </head>
+
 <body>
-    <div class="container">
+    <header class="mobile-header" id="mobileHeader">
+        <div class="logo-mobile">
+            <h1>Aqua<span>Sync</span></h1>
+        </div>
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
         </button>
-        
+    </header>
+    <div class="container">
         <div class="sidebar" id="sidebar">
             <div class="logo">
                 <h1>Aqua<span>Sync</span></h1>
@@ -53,23 +59,11 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="main-content">
             <div class="header">
                 <div class="page-title">
                     <h2>Centro de Alertas</h2>
-                </div>
-                <div class="user-menu">
-                    <div class="notification-icon">
-                        <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
-                        <span class="badge">0</span>
-                    </div>
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <span>Administrador</span>
-                    </div>
                 </div>
             </div>
 
@@ -136,7 +130,7 @@
 
         function setupEventListeners() {
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     currentFilter = this.dataset.filter;
@@ -169,7 +163,7 @@
         function renderAlerts() {
             const container = document.getElementById('alertsContainer');
             let filteredAlerts = alertsData;
-            
+
             if (currentFilter !== 'all') {
                 filteredAlerts = alertsData.filter(alert => {
                     if (currentFilter === 'success') {
@@ -216,7 +210,7 @@
         function createAlertSection(type, title, alerts) {
             const section = document.createElement('div');
             section.className = 'alerts-section';
-            
+
             const iconMap = {
                 critical: 'fa-exclamation-triangle',
                 warning: 'fa-exclamation-circle',
@@ -251,7 +245,7 @@
         function createAlertItem(alert) {
             const item = document.createElement('div');
             item.className = `alert-item alert-${alert.type}`;
-            
+
             const iconMap = {
                 critical: 'fa-tint-slash',
                 warning: 'fa-thermometer-three-quarters',
@@ -333,7 +327,7 @@
         function updateStats() {
             if (!window.alertsManager) return;
             const stats = window.alertsManager.getAlertStats();
-            
+
             document.getElementById('stat-critical').textContent = stats.critical;
             document.getElementById('stat-warning').textContent = stats.warning;
             document.getElementById('stat-info').textContent = stats.info;
@@ -373,4 +367,5 @@
         }
     </script>
 </body>
+
 </html>

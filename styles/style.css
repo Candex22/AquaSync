@@ -618,62 +618,89 @@ a{
 .menu-toggle.active {
     background-color: var(--light-brown);
 }
+/* Nuevo Header Fijo para Móvil (Oculto por defecto en escritorio) */
+.mobile-header {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--dark-brown); /* Fondo marrón */
+    color: var(--cream);
+    height: 60px; /* Altura para el header */
+    z-index: 999; /* Asegura que esté sobre otros elementos */
+    padding: 0 15px;
+    box-sizing: border-box;
+    align-items: center; /* Centrado vertical de contenido */
+    justify-content: space-between; /* Distribuye logo y botón */
+}
 
-/* Media Query for Mobile */
+/* Estilo del Logo en Móvil */
+.logo-mobile h1 {
+    margin: 0;
+    font-size: 24px;
+    flex-grow: 1; /* Permite que ocupe espacio para centrar */
+    text-align: center;
+    /* Ajuste de margen para contrarrestar el tamaño del botón y centrar visualmente */
+    margin-right: -45px; /* 45px es el ancho del menu-toggle */
+}
+
+.logo-mobile span {
+    color: var(--medium-green);
+}
+
 @media screen and (max-width: 768px) {
-    /* Show menu toggle button */
-    .menu-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .mobile-header {
+        display: flex; 
     }
 
-    /* Sidebar adjustments for mobile */
+    .main-content {
+        padding: 80px 15px 20px 15px; 
+        margin-top: 10px
+    }
+
+    .sidebar .logo {
+        display: none;
+    }
+
     .sidebar {
         position: fixed;
-        top: 0;
-        left: -250px;
-        width: 250px;
-        height: 100vh;
-        padding: 0;
-        z-index: 1000;
-        transition: left 0.3s ease;
-        overflow-y: auto;
+        top: 60px;
+        right: 15px; 
+        left: auto; 
+        width: 180px; 
+        height: auto;
+        padding: 10px;
+        z-index: 995; 
+        background-color: var(--dark-brown);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        border-radius: 8px; 
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        opacity: 0;
+        visibility: hidden; 
     }
 
-    /* Show sidebar when active */
     .sidebar.active {
-        left: 0;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        opacity: 1;
+        visibility: visible;
     }
 
-    /* Adjustments to fixed elements for mobile */
-    .logo {
-        position: static;
-        padding: 20px;
-        margin-top: 0;
+    .nav-item {
+        padding: 8px 15px; 
+        border-left: none !important;
+    }
+    
+    .nav-item.active {
+        border-left: none; 
     }
 
-    .nav-menu {
-        position: static;
-        padding: 0;
-        margin-top: 0;
-    }
-
-    /* Adjust main content padding for mobile */
-    .main-content {
-        padding: 80px 15px 20px 15px;
-    }
-
-    /* Overlay cuando el menú está abierto */
     .sidebar.active::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 250px;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.3);
-        z-index: -1;
+        content: none;
+    }
+    .menu-toggle {
+        display: flex; 
+        position: static; 
+        align-items: center; 
+        justify-content: center; 
     }
 }

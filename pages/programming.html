@@ -17,10 +17,15 @@
 </head>
 
 <body>
-    <div class="container">
+    <header class="mobile-header" id="mobileHeader">
+        <div class="logo-mobile">
+            <h1>Aqua<span>Sync</span></h1>
+        </div>
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
         </button>
+    </header>
+    <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="logo">
@@ -65,6 +70,12 @@
                 <div class="page-title">
                     <h2>Programación de Riego</h2>
                 </div>
+                <a href="alerts.html" class="notification-link">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
+                        <span class="badge"></span>
+                    </div>
+                </a>
             </div>
 
             <!-- Calendar Widget -->

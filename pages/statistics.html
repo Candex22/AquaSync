@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +12,17 @@
     <script src="../src/menu.js"></script>
     <script src="../src/alerts.js"></script>
 </head>
+
 <body>
-    <div class="container">
+    <header class="mobile-header" id="mobileHeader">
+        <div class="logo-mobile">
+            <h1>Aqua<span>Sync</span></h1>
+        </div>
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
         </button>
+    </header>
+    <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="logo">
@@ -52,7 +59,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- Main Content Area -->
         <div class="main-content">
             <div class="header">
@@ -68,13 +75,15 @@
                             <option value="lastyear">Último año</option>
                         </select>
                     </div>
+                    <a href="alerts.html" class="notification-link">
                     <div class="notification-icon">
                         <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
-                        <span class="badge">0</span>
+                        <span class="badge"></span>
                     </div>
+                </a>
                 </div>
             </div>
-            
+
             <!-- KPI Cards -->
             <div class="kpi-grid">
                 <div class="kpi-card" data-kpi="water">
@@ -89,7 +98,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="kpi-card" data-kpi="energy">
                     <div class="kpi-icon energy">
                         <i class="fas fa-bolt"></i>
@@ -102,7 +111,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="kpi-card" data-kpi="efficiency">
                     <div class="kpi-icon efficiency">
                         <i class="fas fa-leaf"></i>
@@ -115,7 +124,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="kpi-card" data-kpi="savings">
                     <div class="kpi-icon savings">
                         <i class="fas fa-dollar-sign"></i>
@@ -129,7 +138,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Charts Grid -->
             <div class="charts-grid">
                 <!-- Water Usage Chart -->
@@ -155,7 +164,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Zone Performance Chart -->
                 <div class="chart-widget" data-chart="zone-performance">
                     <div class="widget-header">
@@ -177,7 +186,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Temperature & Humidity Trend -->
                 <div class="chart-widget wide" data-chart="environmental">
                     <div class="widget-header">
@@ -208,7 +217,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Detailed Tables -->
             <div class="tables-section">
                 <div class="table-widget">
@@ -236,7 +245,7 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <div class="table-widget">
                     <div class="widget-header">
                         <h3 class="widget-title">Alertas y Eventos</h3>
@@ -257,4 +266,5 @@
     <script src="../src/supabase-config.js"></script>
     <script src="../src/statistics.js"></script>
 </body>
+
 </html>

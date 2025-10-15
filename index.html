@@ -11,16 +11,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="src/supabase-config.js"></script>
     <script src="src/app.js"></script>
-    <script src="src/menu.js"></script>    
+    <script src="src/menu.js"></script>
     <script src="src/alerts.js"></script>
 </head>
 
 <body>
-    <div class="container">
-
+    <header class="mobile-header" id="mobileHeader">
+        <div class="logo-mobile">
+            <h1>Aqua<span>Sync</span></h1>
+        </div>
         <button class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
         </button>
+    </header>
+    <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar" id="sidebar">
             <div class="logo">
@@ -64,6 +68,12 @@
                 <div class="page-title">
                     <h2>Dashboard</h2>
                 </div>
+                <a href="pages/alerts.html" class="notification-link">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell fa-lg" style="color: var(--dark-brown);"></i>
+                        <span class="badge"></span>
+                    </div>
+                </a>
             </div>
 
             <!-- Dashboard Widgets -->
