@@ -400,19 +400,41 @@ async function handleScheduleSubmit(event) {
     const scheduledDateTime = new Date(`${date}T${time}`);
 
     try {
-        // Insertar en Supabase
-        const { data, error } = await window.supabaseClient
-            .from('programacion')
-            .insert([
-                {
-                    zone_id: parseInt(zoneId),
-                    scheduled_time: scheduledDateTime.toISOString(),
-                    duration: parseInt(duration),
-                    executed: false
-                }
-            ]);
+        // Si zoneId es 0 (todas las zonas), crear dos registros para zona 2 y 3
+        if (parseInt(zoneId) === 0) {
+            const { data, error } = await window.supabaseClient
+                .from('programacion')
+                .insert([
+                    {
+                        zone_id: 2,
+                        scheduled_time: scheduledDateTime.toISOString(),
+                        duration: parseInt(duration),
+                        executed: false
+                    },
+                    {
+                        zone_id: 3,
+                        scheduled_time: scheduledDateTime.toISOString(),
+                        duration: parseInt(duration),
+                        executed: false
+                    }
+                ]);
 
-        if (error) throw error;
+            if (error) throw error;
+        } else {
+            // Insertar solo para la zona específica
+            const { data, error } = await window.supabaseClient
+                .from('programacion')
+                .insert([
+                    {
+                        zone_id: parseInt(zoneId),
+                        scheduled_time: scheduledDateTime.toISOString(),
+                        duration: parseInt(duration),
+                        executed: false
+                    }
+                ]);
+
+            if (error) throw error;
+        }
 
         // Ocultar formulario
         hideFormOverlay();
@@ -490,24 +512,34 @@ function updateScheduleUI(scheduleItems) {
                 <h3 class="widget-title">Próximos Riegos</h3>
                 <div class="widget-actions">
                     <a href="pages/programming.html" class="notification-link">
-                        <button><i class="fas fa-calendar"></i></button>                                            </a>
+                        <button><i class="fas fa-calendar"></i></button>
                     </a>
-                    <button onclick="loadScheduledIrrigation()"><i class="fas fa-sync-alt"></i></button>
-                    <button onclick="showScheduleForm()"><i class="fas fa-plus"></i></button>
+                    <button class="refresh-schedule-btn"><i class="fas fa-sync-alt"></i></button>
+                    <button class="add-schedule-btn"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
             <div class="empty-schedule">
                 <p>No hay riegos programados</p>
-                <button class="zone-btn schedule-btn">
+                <button class="zone-btn schedule-btn-empty">
                     <i class="fas fa-calendar-plus"></i> Programar Riego
                 </button>
             </div>
         `;
 
-        // Configurar event listener para el botón
-        const scheduleBtn = scheduledWidget.querySelector('.schedule-btn');
+        // Configurar event listeners para los botones
+        const scheduleBtn = scheduledWidget.querySelector('.schedule-btn-empty');
         if (scheduleBtn) {
             scheduleBtn.addEventListener('click', () => showScheduleForm());
+        }
+
+        const refreshBtn = scheduledWidget.querySelector('.refresh-schedule-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadScheduledIrrigation);
+        }
+
+        const addBtn = scheduledWidget.querySelector('.add-schedule-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => showScheduleForm());
         }
 
         return;
@@ -519,14 +551,13 @@ function updateScheduleUI(scheduleItems) {
             <h3 class="widget-title">Próximos Riegos</h3>
             <div class="widget-actions">
                 <a href="pages/programming.html" class="notification-link">
-                    <button><i class="fas fa-calendar"></i></button>                                            </a>
+                    <button><i class="fas fa-calendar"></i></button>
                 </a>
-                <button onclick="loadScheduledIrrigation()"><i class="fas fa-sync-alt"></i></button>
-                <button onclick="showScheduleForm()"><i class="fas fa-plus"></i></button>
+                <button class="refresh-schedule-btn"><i class="fas fa-sync-alt"></i></button>
+                <button class="add-schedule-btn"><i class="fas fa-plus"></i></button>
             </div>
         </div>
     `;
-
     // Agregar cada programación
     scheduleItems.forEach(item => {
         // Formatear fecha y hora
