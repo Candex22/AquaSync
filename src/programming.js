@@ -486,40 +486,152 @@ async function deleteSchedule(scheduleId) {
     }
 }
 
-// Editar programación (funcionalidad básica)
+// Editar programación
 async function editSchedule(scheduleId) {
-    // Por simplicidad, por ahora solo permite cambiar la duración
-    const newDuration = prompt('Nueva duración en minutos:', '30');
-    
-    if (newDuration && !isNaN(newDuration) && parseInt(newDuration) > 0) {
-        try {
-            // Verificar que supabase esté disponible
-            if (!supabase) {
-                throw new Error('Cliente de Supabase no está inicializado');
-            }
-            
-            const { error } = await supabase
-                .from('programacion')
-                .update({ duration: parseInt(newDuration) })
-                .eq('id', scheduleId);
-                
-            if (error) throw error;
-            
-            // Recargar programaciones
-            if (selectedDate) {
-                const dateKey = formatDateKey(selectedDate);
-                loadDaySchedules(dateKey);
-            }
-            
-            showNotification('Programación actualizada exitosamente', 'success');
-            
-        } catch (error) {
-            console.error('Error actualizando programación:', error);
-            showNotification('Error al actualizar la programación', 'error');
+    try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
         }
+        
+        // Obtener los datos actuales de la programación
+        const { data, error } = await supabase
+            .from('programacion')
+            .select(`
+                id, 
+                scheduled_time, 
+                duration, 
+                zone_id,
+                executed
+            `)
+            .eq('id', scheduleId)
+            .single();
+            
+        if (error) throw error;
+        
+        // Abrir modal de edición
+        showEditScheduleModal(data);
+        
+    } catch (error) {
+        console.error('Error cargando programación:', error);
+        showNotification('Error al cargar la programación', 'error');
     }
 }
 
+// Mostrar modal de edición
+function showEditScheduleModal(schedule) {
+    const modal = document.getElementById('quickActionModal');
+    const title = document.getElementById('quickActionTitle');
+    const content = document.getElementById('quickActionContent');
+    
+    title.textContent = 'Editar Programación';
+    
+    // Extraer fecha y hora de scheduled_time
+    const scheduleDate = new Date(schedule.scheduled_time);
+    const dateStr = scheduleDate.toISOString().split('T')[0];
+    const timeStr = scheduleDate.toTimeString().slice(0, 5);
+    
+    content.innerHTML = `
+        <form id="editScheduleForm">
+            <div class="form-group">
+                <label for="editZone">Zona de Riego:</label>
+                <select id="editZone" required>
+                    <option value="">Seleccionar zona...</option>
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editDate">Fecha:</label>
+                    <input type="date" id="editDate" value="${dateStr}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTime">Hora:</label>
+                    <input type="time" id="editTime" value="${timeStr}" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="editDuration">Duración (minutos):</label>
+                <input type="number" id="editDuration" min="5" max="120" value="${schedule.duration}" required>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn secondary" onclick="closeQuickActionModal()">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    `;
+    
+    // Llenar select de zonas
+    const editZoneSelect = content.querySelector('#editZone');
+    zones.forEach(zone => {
+        const option = document.createElement('option');
+        option.value = zone.id;
+        option.textContent = zone.name;
+        if (zone.id === schedule.zone_id) {
+            option.selected = true;
+        }
+        editZoneSelect.appendChild(option);
+    });
+    
+    // Event listener para el formulario
+    content.querySelector('#editScheduleForm').addEventListener('submit', (event) => {
+        handleEditSchedule(event, schedule.id);
+    });
+    
+    modal.style.display = 'flex';
+}
+
+// Manejar actualización de programación
+async function handleEditSchedule(event, scheduleId) {
+    event.preventDefault();
+    
+    const zoneId = parseInt(document.getElementById('editZone').value);
+    const date = document.getElementById('editDate').value;
+    const time = document.getElementById('editTime').value;
+    const duration = parseInt(document.getElementById('editDuration').value);
+    
+    // Crear fecha y hora completa
+    const scheduledDateTime = new Date(`${date}T${time}:00`);
+    
+    try {
+        // Verificar que supabase esté disponible
+        if (!supabase) {
+            throw new Error('Cliente de Supabase no está inicializado');
+        }
+        
+        const { error } = await supabase
+            .from('programacion')
+            .update({
+                zone_id: zoneId,
+                scheduled_time: scheduledDateTime.toISOString(),
+                duration: duration
+            })
+            .eq('id', scheduleId);
+            
+        if (error) throw error;
+        
+        closeQuickActionModal();
+        
+        // Recargar programaciones
+        if (selectedDate) {
+            const dateKey = formatDateKey(selectedDate);
+            loadDaySchedules(dateKey);
+        }
+        loadMonthSchedules();
+        
+        showNotification('Programación actualizada exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error actualizando programación:', error);
+        showNotification('Error al actualizar la programación', 'error');
+    }
+}
 // Mostrar programaciones de hoy
 function showTodaySchedule() {
     const today = new Date();

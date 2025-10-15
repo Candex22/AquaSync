@@ -104,12 +104,18 @@
 }
 
 .calendar-day.has-schedules {
-    background-color: rgba(172, 189, 105, 0.2);
-    border-left: 3px solid var(--medium-green);
+    background-color: rgba(189, 153, 105, 0.2);
+    border-left: 3px solid var(--light-brown);
 }
 
 .calendar-day.today.has-schedules {
-    border-left: 3px solid white;
+    background-color: rgba(153, 189, 105, 0.2);
+    border-left: 3px solid var(--medium-green);
+    color: rgb(90, 63, 47);
+}
+
+.calendar-day.today.has-schedules .schedule-dot{
+    background-color: var(--medium-green);
 }
 
 .day-number {
@@ -128,7 +134,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: var(--medium-green);
+    background-color: var(--light-brown);
 }
 
 .schedule-count {
