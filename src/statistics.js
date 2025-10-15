@@ -342,23 +342,30 @@ class StatisticsManager {
         }
     }
 
-    updateWaterUsageChart(data) {
-        const chartContainer = document.querySelector('.chart-bars');
+  updateWaterUsageChart(data) {
+        const chartContainer = document.querySelector('.chart-bars'); // Seleccionar el contenedor de barras interno
         if (!chartContainer || !data.length) {
             chartContainer.innerHTML = '<div class="no-data">No hay datos disponibles</div>';
             return;
         }
 
         const maxValue = Math.max(...data.map(d => d.liters));
-
+        
         chartContainer.innerHTML = data.map(day => {
-            const height = maxValue > 0 ? (day.liters / maxValue) * 100 : 0;
+            const height = maxValue > 0 ? ((day.liters / maxValue) * 90) : 5;
+            
             return `
-                <div class="bar" 
-                     style="height: ${height}%;" 
-                     data-value="${day.liters}"
-                     data-date="${day.date}"
-                     title="${day.date}: ${day.liters}L">
+                <div class="bar-wrapper">
+                    <div class="bar" 
+                         style="height: ${height}%;" 
+                         data-value="${day.liters}"
+                         data-date="${day.date}"
+                         title="${day.date}: ${day.liters}L">
+                    </div>
+                    <div class="bar-label">
+                        <div class="bar-date">${day.date}</div>
+                        <div class="bar-value">${this.formatNumber(day.liters)}L</div>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -457,7 +464,7 @@ class StatisticsManager {
             'presión': 'pressure'
         };
         const field = fieldMap[type] || 'temperature';
-        
+
         // Unidades según el tipo
         const unitMap = {
             'temperatura': '°C',
@@ -479,7 +486,7 @@ class StatisticsManager {
         for (let i = 0; i < numLabels; i++) {
             const value = minValue + (range * i / (numLabels - 1));
             const y = height - padding - ((value - minValue) / range) * (height - 2 * padding);
-            
+
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', padding - 10);
             text.setAttribute('y', y + 5);
@@ -487,7 +494,7 @@ class StatisticsManager {
             text.setAttribute('fill', 'var(--light-brown)');
             text.setAttribute('font-size', '12');
             text.textContent = value.toFixed(1) + unit;
-            
+
             svg.appendChild(text);
         }
 

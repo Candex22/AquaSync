@@ -160,40 +160,90 @@
 
 /* Chart Containers */
 .chart-container {
-    height: 300px;
+    height: 350px;
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-width: 0;
 }
 
-.chart-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-    justify-content: center;
+.chart-bars-wrapper {
+    width: 100%;
+    max-width: 750px;
+    overflow-x: auto; /* Permite el scroll horizontal */
+    overflow-y: hidden;
+    padding-bottom: 10px;
+    min-width: 0;
+}
+
+/* Scrollbar personalizado para el gráfico de barras */
+.chart-bars-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.chart-bars-wrapper::-webkit-scrollbar-track {
+    background: rgba(156, 171, 99, 0.1);
+    border-radius: 10px;
+}
+
+.chart-bars-wrapper::-webkit-scrollbar-thumb {
+    background: var(--medium-green);
+    border-radius: 10px;
+}
+
+.chart-bars-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-brown);
 }
 
 .chart-bars {
     display: flex;
-    align-items: end;
+    align-items: flex-end;
     gap: 15px;
-    height: 200px;
-    margin-bottom: 20px;
+    height: 240px;
+    margin-bottom: 10px;
+    padding: 10px;
+    width: fit-content; /* Asegura que el contenedor interno se expanda */
+    min-width: 100%; /* Para que no se encoja si hay pocos datos */
+}
+
+.bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
 }
 
 .bar {
-    width: 30px;
+    width: 40px;
     background: linear-gradient(to top, var(--medium-green) 0%, var(--light-green) 100%);
     border-radius: 4px 4px 0 0;
     box-shadow: 0 4px 8px rgba(156, 171, 99, 0.3);
     transition: all 0.3s ease;
+    min-height: 90px;
 }
 
 .bar:hover {
     transform: scaleY(1.05);
     box-shadow: 0 6px 12px rgba(156, 171, 99, 0.4);
+}
+
+.bar-label {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 11px;
+}
+
+.bar-date {
+    color: var(--dark-brown);
+    font-weight: 600;
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+
+.bar-value {
+    color: var(--light-brown);
+    font-size: 10px;
 }
 
 /* Donut Chart */
