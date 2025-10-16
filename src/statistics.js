@@ -97,11 +97,11 @@ class StatisticsManager {
     }
 
     // Obtener datos KPI desde Supabase
-    async fetchKPIData() {
+   async fetchKPIData() {
         const dateRange = this.getDateRange();
 
         try {
-            // Obtener consumo de agua
+            // Obtener consumo de agua del período actual
             const { data: waterData, error: waterError } = await this.supabase
                 .from('irrigation_history')
                 .select('liters_used, created_at')
@@ -111,26 +111,38 @@ class StatisticsManager {
 
             if (waterError) throw waterError;
 
-            // Obtener datos de energía (simulados por ahora)
-            const { data: energyData, error: energyError } = await this.supabase
-                .from('system_logs')
-                .select('*')
-                .gte('created_at', dateRange.start)
-                .lte('created_at', dateRange.end);
+            // Obtener consumo de agua del período anterior (para comparación)
+            const previousDateRange = this.getPreviousDateRange();
+            const { data: previousWaterData, error: previousWaterError } = await this.supabase
+                .from('irrigation_history')
+                .select('liters_used')
+                .gte('created_at', previousDateRange.start)
+                .lte('created_at', previousDateRange.end)
+                .eq('status', 'completed');
+
+            if (previousWaterError) throw previousWaterError;
 
             // Calcular totales
             const totalWater = waterData?.reduce((sum, record) => sum + (record.liters_used || 0), 0) || 0;
-            const averageEfficiency = 94; // Calcular basado en datos reales
-            const estimatedSavings = Math.round(totalWater * 0.15); // Estimación
+            const previousTotalWater = previousWaterData?.reduce((sum, record) => sum + (record.liters_used || 0), 0) || 0;
+            
+            const averageEfficiency = 94; // Valor base, puede ajustarse
+            const estimatedSavings = Math.round(totalWater * 0.15); // 15% de ahorro estimado
+            
+            // Calcular cambios porcentuales
+            const waterChange = this.calculatePercentageChange(totalWater, previousTotalWater);
+            const energyConsumption = Math.round(totalWater * 0.02); // Estimación: 0.02 kWh por litro
+            const previousEnergyConsumption = Math.round(previousTotalWater * 0.02);
+            const energyChange = this.calculatePercentageChange(energyConsumption, previousEnergyConsumption);
 
             return {
                 waterUsage: {
                     value: totalWater,
-                    change: this.calculatePercentageChange(totalWater, 2200) // Comparar con período anterior
+                    change: waterChange
                 },
                 energyConsumption: {
-                    value: Math.round(totalWater * 0.02), // Estimación: 0.02 kWh por litro
-                    change: -8
+                    value: energyConsumption,
+                    change: energyChange
                 },
                 efficiency: {
                     value: averageEfficiency,
@@ -144,6 +156,53 @@ class StatisticsManager {
         } catch (error) {
             console.error('Error fetching KPI data:', error);
             return this.getDefaultKPIData();
+        }
+    }
+
+    // Método auxiliar para obtener el período anterior
+    getPreviousDateRange() {
+        const now = new Date();
+        let start = new Date();
+        let previousStart = new Date();
+        let previousEnd = new Date();
+
+        const daysDifference = this.getDaysDifference();
+
+        switch (this.currentDateFilter) {
+            case 'last7days':
+                previousStart.setDate(now.getDate() - 14);
+                previousEnd.setDate(now.getDate() - 7);
+                break;
+            case 'last30days':
+                previousStart.setDate(now.getDate() - 60);
+                previousEnd.setDate(now.getDate() - 30);
+                break;
+            case 'lastyear':
+                previousStart.setFullYear(now.getFullYear() - 2);
+                previousEnd.setFullYear(now.getFullYear() - 1);
+                break;
+            default:
+                previousStart.setDate(now.getDate() - 14);
+                previousEnd.setDate(now.getDate() - 7);
+        }
+
+        return {
+            start: previousStart.toISOString(),
+            end: previousEnd.toISOString()
+        };
+    }
+
+    // Método auxiliar para obtener días de diferencia
+    getDaysDifference() {
+        switch (this.currentDateFilter) {
+            case 'last7days':
+                return 7;
+            case 'last30days':
+                return 30;
+            case 'lastyear':
+                return 365;
+            default:
+                return 7;
         }
     }
 
@@ -182,15 +241,14 @@ class StatisticsManager {
         }
     }
 
-    async fetchZonePerformanceData() {
+ async fetchZonePerformanceData() {
         const dateRange = this.getDateRange();
 
         try {
-            // Obtener zonas
+            // Obtener zonas de la tabla 'zonas' (español)
             const { data: zones, error: zonesError } = await this.supabase
-                .from('zones')
-                .select('*')
-                .eq('active', true);
+                .from('zonas')
+                .select('id, name, active');
 
             if (zonesError) throw zonesError;
 
@@ -274,7 +332,7 @@ class StatisticsManager {
 
             if (zoneIds.length > 0) {
                 const { data: zones, error: zonesError } = await this.supabase
-                    .from('zones')
+                    .from('zonas')  // Cambiar 'zones' por 'zonas'
                     .select('id, description')
                     .in('id', zoneIds);
 
@@ -377,21 +435,36 @@ class StatisticsManager {
         const { zones, usage } = data;
         const totalUsage = usage.reduce((sum, zone) => sum + zone.liters, 0);
 
-        // Actualizar estadísticas de zona
+        // Actualizar estadísticas de zona con gráfico de barras horizontales
         const zoneStats = document.querySelector('.zone-stats');
         if (zoneStats) {
             if (usage.length === 0) {
                 zoneStats.innerHTML = '<div class="no-data">No hay datos de zonas disponibles</div>';
             } else {
-                zoneStats.innerHTML = usage.map((zone, index) => {
+                const maxLiters = Math.max(...usage.map(z => z.liters));
+                
+               zoneStats.innerHTML = usage.map((zone, index) => {
                     const percentage = totalUsage > 0 ? (zone.liters / totalUsage * 100).toFixed(1) : 0;
-                    const zoneInfo = zones.find(z => z.id === zone.zone_id) || { description: `Zona ${zone.zone_id}` };
+                    const barWidth = maxLiters > 0 ? (zone.liters / maxLiters * 100) : 0;
+                    const zoneInfo = zones.find(z => z.id === zone.zone_id) || { id: `Zona ${zone.zone_id}` };
+                    const colors = [
+                        'var(--medium-green)',
+                        'var(--light-green)',
+                        'var(--light-brown)',
+                        'var(--dark-brown)',
+                        'rgba(156, 171, 99, 0.5)'
+                    ];
+                    const color = colors[index % colors.length];
 
                     return `
-                        <div class="zone-stat-item">
-                            <div class="zone-color zone-${(index % 5) + 1}"></div>
-                            <span class="zone-name">${zoneInfo.description}</span>
-                            <span class="zone-percentage">${percentage}%</span>
+                        <div class="zone-bar-container">
+                            <div class="zone-bar-info">
+                                <span class="zone-name">${zoneInfo.name}</span>
+                                <span class="zone-value">${this.formatNumber(zone.liters)}L (${percentage}%)</span>
+                            </div>
+                            <div class="zone-bar-wrapper">
+                                <div class="zone-bar" style="width: ${barWidth}%; background-color: ${color};"></div>
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -402,39 +475,7 @@ class StatisticsManager {
         const donutValue = document.querySelector('.donut-value');
         if (donutValue) {
             const activeZones = usage.filter(zone => zone.liters > 0).length;
-            donutValue.textContent = 2;
-        }
-
-        // Actualizar gráfico donut
-        this.updateDonutChart(usage, totalUsage);
-    }
-
-    updateDonutChart(usage, totalUsage) {
-        const donutChart = document.querySelector('.donut-chart');
-        if (!donutChart || !usage.length) return;
-
-        let currentAngle = 0;
-        const colors = [
-            'var(--medium-green)',
-            'var(--light-green)',
-            'var(--light-brown)',
-            'var(--dark-brown)',
-            'rgba(156, 171, 99, 0.3)'
-        ];
-
-        const gradientStops = usage.map((zone, index) => {
-            const percentage = totalUsage > 0 ? (zone.liters / totalUsage) : 0;
-            const angle = percentage * 360;
-            const color = colors[index % colors.length];
-
-            const stop = `${color} ${currentAngle}deg ${currentAngle + angle}deg`;
-            currentAngle += angle;
-
-            return stop;
-        }).join(', ');
-
-        if (gradientStops) {
-            donutChart.style.background = `conic-gradient(${gradientStops})`;
+            donutValue.textContent = activeZones;
         }
     }
 
