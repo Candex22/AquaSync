@@ -528,7 +528,6 @@ class StatisticsManager {
             const x = padding + (index / (validData.length - 1)) * (width - 2 * padding);
             const y = height - padding - ((item[field] - minValue) / range) * (height - 2 * padding);
 
-            // 1. Círculo Visual (lo que el usuario ve)
             const visualCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             visualCircle.setAttribute('cx', x);
             visualCircle.setAttribute('cy', y);
@@ -538,7 +537,6 @@ class StatisticsManager {
             visualCircle.setAttribute('stroke-width', 2);
             visualCircle.setAttribute('pointer-events', 'none'); // IMPORTANTE: no captura eventos, solo es visual
 
-            // 2. Círculo de Detección de Eventos (hit area)
             const hitCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             hitCircle.setAttribute('cx', x);
             hitCircle.setAttribute('cy', y);
@@ -547,15 +545,13 @@ class StatisticsManager {
             hitCircle.setAttribute('cursor', 'pointer');
             hitCircle.setAttribute('pointer-events', 'all'); // CRÍTICO: Asegura que SÍ captura el evento
 
-            // 3. Establecer Datos
-            const dateStr = item.date;
+            const dateStr = item.timestamp; // Usar timestamp en lugar de date
             const valueStr = item[field] !== null && item[field] !== undefined ? item[field].toFixed(1) : 'N/A';
             
             hitCircle.setAttribute('data-date', dateStr);
             hitCircle.setAttribute('data-value', valueStr);
-            hitCircle.dataset.type = type; // Guardamos el tipo para obtener la unidad
+            hitCircle.dataset.type = type; 
 
-            // 4. Lógica del Hover
             const unit = unitMap[type] || '';
 
             hitCircle.addEventListener('mouseenter', (e) => {
